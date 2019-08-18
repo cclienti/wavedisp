@@ -250,6 +250,10 @@ class ASTNode(ASTBase):
         inc_file = caller[1]
         inc_line = caller[2]
 
+        if not os.path.isabs(filename):
+            search_path = os.path.dirname(self.filename)
+            filename = os.path.join(search_path, filename)
+
         try:
             module_list = os.path.basename(filename).split('.')
             module_name = '_'.join(module_list[:-1])

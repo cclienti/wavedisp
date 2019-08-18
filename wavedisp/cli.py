@@ -73,6 +73,9 @@ def main():
     kwargs['__generator'] = args.generator
 
     block = Block()
+    block.filename = args.input
+    block.line = 0
+
     block.include(args.input, **kwargs)
     block.forward()
 
