@@ -55,7 +55,7 @@ def main():
 
     parser.add_argument('-t', '--target', type=str, default='gtkwave',
                         help=('targeted simulator for the generated waveforms file, '
-                              'available targets: gtkwave, modelsim and rivierapro'))
+                              'available targets: gtkwave, modelsim, rivierapro and dot (graphviz)'))
     parser.add_argument('-g', '--generator', type=str, default='generator',
                         help='generator function name in the input file')
     parser.add_argument('-a', '--kwargs', default='{}',
@@ -90,6 +90,11 @@ def main():
 
     elif args.target == 'rivierapro':
         pass
+
+    elif args.target == 'dot':
+        fmod = open(args.output, 'w')
+        fmod.write(str(block.children[0]))
+        fmod.close()
 
     else:
         logger.error('target "%s" not supported', args.target)
