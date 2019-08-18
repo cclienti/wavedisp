@@ -247,11 +247,12 @@ class ASTNode(ASTBase):
 
         stack = inspect.stack()
         caller = stack[1]
+        inc_file = caller[1]
         inc_line = caller[2]
-        inc_file = inspect.getmodule(caller[0]).__file__
 
         try:
-            module_name = os.path.basename(filename).split('.')[0]
+            module_list = os.path.basename(filename).split('.')
+            module_name = '_'.join(module_list[:-1])
             spec = importlib.util.spec_from_file_location(module_name, filename)
             dest = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(dest)
