@@ -88,7 +88,7 @@ class ModelsimTarget(Visitor):
                 color = tree.properties['color']
                 if color != '':
                     try:
-                        self.genstr += '-color {} '.format(X11_COLORS[color])
+                        self.genstr += '-color #{:02x}{:02x}{:02x} '.format(*X11_COLORS[color])
                     except KeyError:
                         LOGGER.error('%s:%i: unkown color "%s"', tree.filename, tree.line, color)
 
