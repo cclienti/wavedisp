@@ -27,6 +27,9 @@ import re
 import os
 
 
+LOGGER = logging.getLogger('wavegen')
+
+
 class ASTBase:
     """Base class to describe a node or a leaf.
 
@@ -145,8 +148,8 @@ class ASTBase:
         if key in self.__PropertyKeys:
             self.properties[key] = value
         else:
-            logging.error('%s:%i: unknown property "%s"',
-                          self.filename, self.line, key)
+            LOGGER.error('%s:%i: unknown property "%s"',
+                         self.filename, self.line, key)
 
     def get_property(self, key) -> str:
         """Get a property.
@@ -158,8 +161,8 @@ class ASTBase:
         try:
             return self.properties[key]
         except KeyError:
-            logging.error('%s:%i: unknown property "%s"',
-                          self.filename, self.line, key)
+            LOGGER.error('%s:%i: unknown property "%s"',
+                         self.filename, self.line, key)
 
     def forward(self):
         """The forward method propagate information recursively across the
@@ -226,7 +229,7 @@ class ASTNode(ASTBase):
 
         :Keyword Arguments:
 
-           * *generator*: name of the function to call in the included
+           * *__generator*: name of the function to call in the included
               file to get the wavedisp tree (default: 'generator')
 
            * All remaining kwargs will be transfered to the generator
@@ -236,10 +239,10 @@ class ASTNode(ASTBase):
 
         """
 
-        if 'generator' not in kwargs.keys():
+        if '__generator' not in kwargs.keys():
             generator = 'generator'
         else:
-            generator = kwargs['generator']
+            generator = kwargs['__generator']
 
         stack = inspect.stack()
         caller = stack[1]
@@ -251,12 +254,18 @@ class ASTNode(ASTBase):
             spec = importlib.util.spec_from_file_location(module_name, filename)
             dest = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(dest)
+
             tree = getattr(dest, generator)(**kwargs)
             self.children.append(tree)
             return tree
 
-        except KeyError:
-            logging.error('%s:%i: failed to include "%s"', inc_file, inc_line, filename)
+        except EnvironmentError:
+            LOGGER.error('%s:%i: failed to include "%s": bad filename or permissions error',
+                         inc_file, inc_line, filename)
+
+        except AttributeError:
+            LOGGER.error('%s:%i: failed to include "%s", generator "%s" not found',
+                         inc_file, inc_line, filename, generator)
 
         return None
 
