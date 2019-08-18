@@ -26,7 +26,7 @@ import argparse
 import json
 
 from wavedisp.ast import Block
-from wavedisp.generator_modelsim import ModelsimGenerator
+from wavedisp.target_modelsim import ModelsimTarget
 
 
 class LoggingLevelCounterHandler(logging.Handler):
@@ -80,7 +80,7 @@ def main():
         pass
 
     elif args.target == 'modelsim':
-        modelsim_generator = ModelsimGenerator(block)
+        modelsim_generator = ModelsimTarget(block)
         try:
             fmod = open(args.output, 'w')
             fmod.write(modelsim_generator.genstr)

@@ -29,7 +29,7 @@ from .x11colors import X11_COLORS
 LOGGER = logging.getLogger('wavegen')
 
 
-class ModelsimGenerator(Visitor):
+class ModelsimTarget(Visitor):
     """Code generator for the Modelsim viewer."""
 
     RadixDict = {'binary': 'binary',

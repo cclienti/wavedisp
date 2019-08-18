@@ -23,7 +23,7 @@
 import unittest
 
 from wavedisp.ast import Hierarchy, Divider, Disp, Group, Block, ASTBase
-from wavedisp.generator_modelsim import ModelsimGenerator
+from wavedisp.target_modelsim import ModelsimTarget
 
 
 MODELSIM_GENERATOR_REF = """# Wavedisp generated modelsim file
@@ -47,10 +47,10 @@ update
 """
 
 
-class TestModelsimGenerator(unittest.TestCase):
+class TestModelsimTarget(unittest.TestCase):
     """Test class for Visitor base class."""
 
-    def test_generator_modelsim(self):
+    def test_target_modelsim(self):
         """Test the modelsim generator."""
 
         ASTBase.reset_unique_id()
@@ -77,8 +77,8 @@ class TestModelsimGenerator(unittest.TestCase):
         testbench.forward()
 
         # Generate the tcl waveforms file
-        modelsim = ModelsimGenerator(testbench)
-        ftcl = open('test_generator_modelsim.tcl', 'w')
+        modelsim = ModelsimTarget(testbench)
+        ftcl = open('test_target_modelsim.tcl', 'w')
         ftcl.write(modelsim.genstr)
         ftcl.close()
 
