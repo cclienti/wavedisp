@@ -26,7 +26,7 @@ REF_AST_DOT_RENDERING = """digraph G {
     n0 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Hierarchy</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: []</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': '', 'height': '', 'radix': ''}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 39</TD></TR></TABLE> >];
@@ -41,7 +41,7 @@ REF_AST_DOT_RENDERING = """digraph G {
     n2 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Hierarchy</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: []</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: top/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /top</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': '', 'height': '', 'radix': ''}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 42</TD></TR></TABLE> >];
@@ -88,7 +88,7 @@ REF_AST_DOT_RENDERING = """digraph G {
     n8 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Hierarchy</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: []</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': '', 'height': '', 'radix': ''}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 50</TD></TR></TABLE> >];
@@ -184,14 +184,14 @@ REF_AST_FORWARD = """digraph G {
     n0 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Hierarchy</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: []</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': '', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 70</TD></TR></TABLE> >];
     n1 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Divider</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['Clocks']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 71</TD></TR></TABLE> >];
@@ -199,14 +199,14 @@ REF_AST_FORWARD = """digraph G {
     n2 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Hierarchy</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: []</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': '', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 73</TD></TR></TABLE> >];
     n3 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['clock_main', 'external_pll_valid']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': '', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 74</TD></TR></TABLE> >];
@@ -214,7 +214,7 @@ REF_AST_FORWARD = """digraph G {
     n4 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Divider</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['The divider']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': '', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 75</TD></TR></TABLE> >];
@@ -222,14 +222,14 @@ REF_AST_FORWARD = """digraph G {
     n5 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Group</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['reset_group']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': '', 'height': '', 'radix': 'binary'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 77</TD></TR></TABLE> >];
     n6 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['reset_inst/pcie_rstn']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': '', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 78</TD></TR></TABLE> >];
@@ -237,7 +237,7 @@ REF_AST_FORWARD = """digraph G {
     n7 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['reset_inst/ethernet_reset']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': '', 'height': '', 'radix': 'binary'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 79</TD></TR></TABLE> >];
@@ -246,21 +246,21 @@ REF_AST_FORWARD = """digraph G {
     n8 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Hierarchy</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: []</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 81</TD></TR></TABLE> >];
     n9 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Group</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['reg 0']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'red', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 83</TD></TR></TABLE> >];
     n10 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['register[0]']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'yellow', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 84</TD></TR></TABLE> >];
@@ -269,14 +269,14 @@ REF_AST_FORWARD = """digraph G {
     n11 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Group</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['reg 1']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'red', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 83</TD></TR></TABLE> >];
     n12 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['register[1]']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'yellow', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 84</TD></TR></TABLE> >];
@@ -285,14 +285,14 @@ REF_AST_FORWARD = """digraph G {
     n13 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Group</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['reg 2']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'red', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 83</TD></TR></TABLE> >];
     n14 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['register[2]']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'yellow', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 84</TD></TR></TABLE> >];
@@ -301,14 +301,14 @@ REF_AST_FORWARD = """digraph G {
     n15 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Group</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['reg 3']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'red', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 83</TD></TR></TABLE> >];
     n16 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['register[3]']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'yellow', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 84</TD></TR></TABLE> >];
@@ -317,14 +317,14 @@ REF_AST_FORWARD = """digraph G {
     n17 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Group</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['reg 4']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'red', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 83</TD></TR></TABLE> >];
     n18 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['register[4]']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'yellow', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 84</TD></TR></TABLE> >];
@@ -342,14 +342,14 @@ REF_AST_INCLUDE = """digraph G {
     n0 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Hierarchy</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: []</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': '', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 102</TD></TR></TABLE> >];
     n1 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Divider</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['Clocks']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 103</TD></TR></TABLE> >];
@@ -357,14 +357,14 @@ REF_AST_INCLUDE = """digraph G {
     n2 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Hierarchy</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: []</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': '', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 105</TD></TR></TABLE> >];
     n3 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['clock_main', 'external_pll_valid']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': '', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 106</TD></TR></TABLE> >];
@@ -372,7 +372,7 @@ REF_AST_INCLUDE = """digraph G {
     n4 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Divider</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['The divider']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': '', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 107</TD></TR></TABLE> >];
@@ -380,14 +380,14 @@ REF_AST_INCLUDE = """digraph G {
     n5 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Group</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['reset_group']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': '', 'height': '', 'radix': 'binary'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 109</TD></TR></TABLE> >];
     n6 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['reset_inst/pcie_rstn']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': '', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 110</TD></TR></TABLE> >];
@@ -395,7 +395,7 @@ REF_AST_INCLUDE = """digraph G {
     n7 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['reset_inst/ethernet_reset']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': '', 'height': '', 'radix': 'binary'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 111</TD></TR></TABLE> >];
@@ -404,28 +404,28 @@ REF_AST_INCLUDE = """digraph G {
     n8 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Hierarchy</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: []</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'hexadecimal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 113</TD></TR></TABLE> >];
     n9 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Block</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: []</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 115</TD></TR></TABLE> >];
     n10 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Group</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['reg 0']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast_include_file.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 7</TD></TR></TABLE> >];
     n11 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['register[0]']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast_include_file.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 8</TD></TR></TABLE> >];
@@ -435,21 +435,21 @@ REF_AST_INCLUDE = """digraph G {
     n12 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Block</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: []</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 115</TD></TR></TABLE> >];
     n13 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Group</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['reg 1']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast_include_file.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 7</TD></TR></TABLE> >];
     n14 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['register[1]']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast_include_file.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 8</TD></TR></TABLE> >];
@@ -459,21 +459,21 @@ REF_AST_INCLUDE = """digraph G {
     n15 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Block</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: []</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 115</TD></TR></TABLE> >];
     n16 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Group</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['reg 2']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast_include_file.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 7</TD></TR></TABLE> >];
     n17 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['register[2]']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast_include_file.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 8</TD></TR></TABLE> >];
@@ -483,21 +483,21 @@ REF_AST_INCLUDE = """digraph G {
     n18 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Block</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: []</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 115</TD></TR></TABLE> >];
     n19 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Group</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['reg 3']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast_include_file.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 7</TD></TR></TABLE> >];
     n20 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['register[3]']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast_include_file.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 8</TD></TR></TABLE> >];
@@ -507,21 +507,21 @@ REF_AST_INCLUDE = """digraph G {
     n21 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Block</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: []</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 115</TD></TR></TABLE> >];
     n22 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Group</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['reg 4']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast_include_file.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 7</TD></TR></TABLE> >];
     n23 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['register[4]']</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst/</TD></TR>
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: /home/christophe/src/wavedisp/tests/test_ast_include_file.py</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 8</TD></TR></TABLE> >];

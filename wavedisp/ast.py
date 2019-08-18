@@ -316,8 +316,12 @@ class Hierarchy(ASTNode):
     def __init__(self, hierarchy_path, **kwargs):
         super().__init__(__caller_level=3, **kwargs)
         self.hierarchy = hierarchy_path
-        if not hierarchy_path.endswith('/'):
-            self.hierarchy += '/'
+
+        if not self.hierarchy.startswith('/'):
+            self.hierarchy = '/' + self.hierarchy
+
+        if hierarchy_path.endswith('/'):
+            self.hierarchy = self.hierarchy[:-1]
 
 
 class Group(ASTNode):

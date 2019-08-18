@@ -100,6 +100,6 @@ class ModelsimTarget(Visitor):
             for group in self.state['group']:
                 self.genstr += f'-group {{{group}}} '
 
-            self.genstr += f'{{{tree.hierarchy}{value}}}\n'
+            self.genstr += f'{{{tree.hierarchy}/{value}}}\n'
 
         super().process_disp(tree)
