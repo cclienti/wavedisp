@@ -27,6 +27,7 @@ import json
 
 from wavedisp.ast import Block
 from wavedisp.target_modelsim import ModelsimTarget
+from wavedisp.target_gtkwave import GTKWaveTarget
 
 
 class LoggingLevelCounterHandler(logging.Handler):
@@ -77,13 +78,19 @@ def main():
     block.forward()
 
     if args.target == 'gtkwave':
-        pass
-
-    elif args.target == 'modelsim':
-        modelsim_generator = ModelsimTarget(block)
+        gtkwave_target = GTKWaveTarget(block)
         try:
             fmod = open(args.output, 'w')
-            fmod.write(modelsim_generator.genstr)
+            fmod.write(gtkwave_target.genstr)
+            fmod.close()
+        except EnvironmentError:
+            logger.error('cannot write to "%s"', args.output)
+
+    elif args.target == 'modelsim':
+        modelsim_target = ModelsimTarget(block)
+        try:
+            fmod = open(args.output, 'w')
+            fmod.write(modelsim_target.genstr)
             fmod.close()
         except EnvironmentError:
             logger.error('cannot write to "%s"', args.output)
