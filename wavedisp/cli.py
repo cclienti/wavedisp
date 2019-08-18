@@ -72,10 +72,7 @@ def main():
     kwargs = json.loads(args.kwargs)
     kwargs['__generator'] = args.generator
 
-    block = Block()
-    block.filename = args.input
-    block.line = 0
-
+    block = Block(__filename=args.input, __line=0)
     block.include(args.input, **kwargs)
     block.forward()
 

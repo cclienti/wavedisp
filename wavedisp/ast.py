@@ -63,21 +63,32 @@ class ASTBase:
         ASTBase.__UniqueID = 0
 
     def __init__(self, **kwargs):
+        # Initialize payloads
         self.value = []
         self.hierarchy = ''
         self.properties = {k: '' for k in self.__PropertyKeys}
         self.children = []
         self.uid = ASTBase.get_unique_id()
 
-        self.__caller_level = 1
+        # Lookup filename and line number in the user file.
+        # caller_level, filename and line can be overloaded in kwargs
+        # by prefixing key with __.
+        caller_level = 1
         if '__caller_level' in kwargs:
-            self.__caller_level = kwargs['__caller_level']
+            caller_level = kwargs['__caller_level']
 
         stack = inspect.stack()
-        caller = stack[self.__caller_level]
-        self.line = caller[2]
-        self.filename = caller[1]
+        caller = stack[caller_level]
 
+        self.filename = caller[1]
+        if '__filename' in kwargs:
+            self.filename = kwargs['__filename']
+
+        self.line = caller[2]
+        if '__line' in kwargs:
+            self.line = kwargs['__line']
+
+        # Fill properties using kwargs
         for key, value in kwargs.items():
             if key.startswith('__'):
                 continue
