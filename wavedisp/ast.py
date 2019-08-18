@@ -239,10 +239,11 @@ class ASTNode(ASTBase):
 
         """
 
-        if '__generator' not in kwargs.keys():
+        if '__generator' not in kwargs:
             generator = 'generator'
         else:
             generator = kwargs['__generator']
+            kwargs.pop('__generator')
 
         stack = inspect.stack()
         caller = stack[1]
