@@ -31,17 +31,19 @@ MODELSIM_GENERATOR_REF = """# Wavedisp generated modelsim file
 onerror {resume}
 
 add wave -divider {Clocks}
-add wave clock_main
-add wave external_pll_valid
+add wave {/tb/top/clock_main}
+add wave {/tb/top/external_pll_valid}
 
 add wave -divider {The divider}
-add wave -group reset_group reset_inst/pcie_rstn
-add wave -group reset_group reset_inst/ethernet_reset
-add wave -group reg 0 register[0]
-add wave -group reg 1 register[1]
-add wave -group reg 2 register[2]
-add wave -group reg 3 register[3]
-add wave -group reg 4 register[4]
+add wave -radix binary -group {reset_group} {/tb/top/reset_inst/pcie_rstn}
+add wave -radix hex -group {reset_group} {/tb/top/reset_inst/ethernet_reset}
+add wave -group {reg 0} {/tb/top/reg_inst/register[0]}
+add wave -group {reg 1} {/tb/top/reg_inst/register[1]}
+add wave -group {reg 2} {/tb/top/reg_inst/register[2]}
+add wave -group {reg 3} {/tb/top/reg_inst/register[3]}
+add wave -group {reg 4} {/tb/top/reg_inst/register[4]}
+
+update
 """
 
 
@@ -53,6 +55,7 @@ class TestModelsimGenerator(unittest.TestCase):
 
         ASTBase.reset_unique_id()
 
+        # Create the waveforms AST
         testbench = Hierarchy('/tb')
         testbench.add(Divider('Clocks', color='blue'))
 
@@ -62,7 +65,7 @@ class TestModelsimGenerator(unittest.TestCase):
 
         group = top.add(Group('reset_group', radix='binary'))
         group.add(Disp('reset_inst/pcie_rstn'))
-        group.add(Disp('reset_inst/ethernet_reset'))
+        group.add(Disp('reset_inst/ethernet_reset', radix='hexadecimal'))
 
         hier = top.add(Hierarchy('reg_inst'))
         for i in range(0, 5):
@@ -70,11 +73,16 @@ class TestModelsimGenerator(unittest.TestCase):
             blk = grp.add(Block())
             blk.add(Disp(f'register[{i}]'))
 
+        # Propagate hierarchy and properties
+        testbench.forward()
+
+        # Generate the tcl waveforms file
         modelsim = ModelsimGenerator(testbench)
         ftcl = open('test_generator_modelsim.tcl', 'w')
         ftcl.write(modelsim.genstr)
         ftcl.close()
 
+        # Check against reference
         self.assertEqual(modelsim.genstr, MODELSIM_GENERATOR_REF)
 
 

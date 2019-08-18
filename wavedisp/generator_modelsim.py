@@ -26,6 +26,9 @@ from .visitor import Visitor
 from .x11colors import X11_COLORS
 
 
+LOGGER = logging.getLogger('wavegen')
+
+
 class ModelsimGenerator(Visitor):
     """Code generator for the Modelsim viewer."""
 
@@ -41,6 +44,7 @@ class ModelsimGenerator(Visitor):
         self.state = {'group': []}
         self.genstr = '# Wavedisp generated modelsim file\n\nonerror {resume}\n'
         self.visit(tree)
+        self.genstr += '\nupdate\n'
 
     def process_group(self, tree):
         """Method to process an ast.Group node.
@@ -58,7 +62,7 @@ class ModelsimGenerator(Visitor):
         :param tree: AST tree instance.
         """
 
-        self.genstr += '\nadd wave -divider {{{}}}\n'.format(tree.value[0])
+        self.genstr += f'\nadd wave -divider {{{tree.value[0]}}}\n'
 
         super().process_divider(tree)
 
@@ -77,8 +81,8 @@ class ModelsimGenerator(Visitor):
                     try:
                         self.genstr += '-radix {} '.format(self.RadixDict[radix])
                     except KeyError:
-                        logging.error('%s:%i: unkown radix type "%s"',
-                                      tree.filename, tree.line, radix)
+                        LOGGER.error('%s:%i: unkown radix type "%s"',
+                                     tree.filename, tree.line, radix)
 
             if 'color' in tree.properties:
                 color = tree.properties['color']
@@ -86,7 +90,7 @@ class ModelsimGenerator(Visitor):
                     try:
                         self.genstr += '-color {} '.format(X11_COLORS[color])
                     except KeyError:
-                        logging.error('%s:%i: unkown color "%s"', tree.filename, tree.line, color)
+                        LOGGER.error('%s:%i: unkown color "%s"', tree.filename, tree.line, color)
 
             if 'height' in tree.properties:
                 height = tree.properties['height']
@@ -94,8 +98,8 @@ class ModelsimGenerator(Visitor):
                     self.genstr += f'-height {height} '
 
             for group in self.state['group']:
-                self.genstr += f'-group {group} '
+                self.genstr += f'-group {{{group}}} '
 
-            self.genstr += f'{value}\n'
+            self.genstr += f'{{{tree.hierarchy}{value}}}\n'
 
         super().process_disp(tree)
