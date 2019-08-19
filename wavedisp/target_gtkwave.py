@@ -48,6 +48,43 @@ class GTKWaveTarget(Visitor):
                        'Indigo': (0x4b, 0x00, 0x82),
                        'Violet': (0xee, 0x82, 0xee)}
 
+    @staticmethod
+    def nearest_color(color):
+        """Return the nearest color.
+
+        GTKWave does not support all color defined in X11_COLORS
+        dictionay. We must compute the nearest color that it
+        supports. A L2 distance on RGB values is used to found the
+        best color match.
+
+        :param str color: input color string from the X11_COLORS dictionary.
+
+        :return: a color string from the GTKWave SupportedColors dictionary keys.
+
+        """
+
+        # Get RGB values
+        lookup_color = X11_COLORS[color]
+
+        # Get keys in a list to compure argmin correctly
+        keys = [k for k in GTKWaveTarget.SupportedColors.keys()]
+
+        # Compute all distances, each distance index corresponds to
+        # the index in the keys variable.
+        distance_list = []
+        for key in keys:
+            value = GTKWaveTarget.SupportedColors[key]
+            distance = (value[0] - lookup_color[0])**2
+            distance += (value[1] - lookup_color[1])**2
+            distance += (value[2] - lookup_color[2])**2
+            distance_list.append(distance)
+
+        # argmin (get index of the min)
+        index = distance_list.index(min(distance_list))
+
+        # Return the nearest color
+        return keys[index]
+
     def __init__(self, tree):
         # Stack of list of signal to group. When the stack is empty
         # Disp and Divider must not push information.
@@ -130,21 +167,8 @@ class GTKWaveTarget(Visitor):
                 color = tree.properties['color']
                 if color != '':
                     try:
-                        # Lookup for the RGB values
-                        lookup_color = X11_COLORS[color]
-
                         # Search the nearest color available in SupportedColors
-                        keys = [k for k in self.SupportedColors.keys()]
-
-                        distance_list = []
-                        for key in self.SupportedColors.keys():
-                            value = self.SupportedColors[key]
-                            distance = (value[0] - lookup_color[0])**2
-                            distance += (value[1] - lookup_color[1])**2
-                            distance += (value[2] - lookup_color[2])**2
-                            distance_list.append(value)
-                        index = distance_list.index(min(distance_list))
-                        found_color = keys[index]
+                        found_color = self.nearest_color(color)
 
                         # Write the result
                         self.genstr += f'gtkwave::/Edit/Color_Format/{found_color} {{{fullname}}}\n'
