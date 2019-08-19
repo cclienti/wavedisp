@@ -40,6 +40,14 @@ class GTKWaveTarget(Visitor):
                  'string': 'ASCII',
                  'symbolic': 'Enum'}
 
+    SupportedColors = {'Red': (0xff, 0x00, 0x00),
+                       'Orange': (0xff, 0xa5, 0x00),
+                       'Yellow': (0xff, 0xff, 0x00),
+                       'Green': (0x00, 0xff, 0x00),
+                       'Blue': (0x00, 0x00, 0xff),
+                       'Indigo': (0x4b, 0x00, 0x82),
+                       'Violet': (0xee, 0x82, 0xee)}
+
     def __init__(self, tree):
         # Stack of list of signal to group. When the stack is empty
         # Disp and Divider must not push information.
@@ -113,9 +121,35 @@ class GTKWaveTarget(Visitor):
                 if radix != '':
                     try:
                         radix_conv = self.RadixDict[radix]
+                        self.genstr += f'gtkwave::/Edit/Data_Format/{radix_conv} {{{fullname}}}\n'
                     except KeyError:
                         LOGGER.error('%s:%i: unkown radix type "%s"',
                                      tree.filename, tree.line, radix)
-                    self.genstr += f'gtkwave::/Edit/Data_Format/{radix_conv} {{{fullname}}}\n'
+
+            if 'color' in tree.properties:
+                color = tree.properties['color']
+                if color != '':
+                    try:
+                        # Lookup for the RGB values
+                        lookup_color = X11_COLORS[color]
+
+                        # Search the nearest color available in SupportedColors
+                        keys = [k for k in self.SupportedColors.keys()]
+
+                        distance_list = []
+                        for key in self.SupportedColors.keys():
+                            value = self.SupportedColors[key]
+                            distance = (value[0] - lookup_color[0])**2
+                            distance += (value[1] - lookup_color[1])**2
+                            distance += (value[2] - lookup_color[2])**2
+                            distance_list.append(value)
+                        index = distance_list.index(min(distance_list))
+                        found_color = keys[index]
+
+                        # Write the result
+                        self.genstr += f'gtkwave::/Edit/Color_Format/{found_color} {{{fullname}}}\n'
+
+                    except KeyError:
+                        LOGGER.error('%s:%i: unkown color "%s"', tree.filename, tree.line, color)
 
         super().process_disp(tree)
