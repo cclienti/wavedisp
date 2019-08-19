@@ -97,7 +97,7 @@ class GTKWaveTarget(Visitor):
         :param tree: AST tree instance.
         """
 
-        self.genstr += 'gtkwave::/Edit/Insert_Comment {{{tree.value[0]}}}\n'
+        self.genstr += f'gtkwave::/Edit/Insert_Comment {{{tree.value[0]}}}\n'
 
         super().process_divider(tree)
 
