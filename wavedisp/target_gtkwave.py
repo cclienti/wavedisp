@@ -32,6 +32,14 @@ LOGGER = logging.getLogger('wavegen')
 class GTKWaveTarget(Visitor):
     """Code generator for the GTKWave viewer."""
 
+    RadixDict = {'binary': 'Binary',
+                 'hexadecimal': 'Hex',
+                 'signed': 'Signed Decimal',
+                 'unsigned': 'Decimal',
+                 'octal': 'Octal',
+                 'string': 'ASCII',
+                 'symbolic': 'Enum'}
+
     def __init__(self, tree):
         # Stack of list of signal to group. When the stack is empty
         # Disp and Divider must not push information.
@@ -99,5 +107,15 @@ class GTKWaveTarget(Visitor):
                 self.stack[-1].append(fullname)
 
             self.genstr += f'gtkwave::addSignalsFromList [list {{{fullname}}}]\n'
+
+            if 'radix' in tree.properties:
+                radix = tree.properties['radix']
+                if radix != '':
+                    try:
+                        radix_conv = self.RadixDict[radix]
+                    except KeyError:
+                        LOGGER.error('%s:%i: unkown radix type "%s"',
+                                     tree.filename, tree.line, radix)
+                    self.genstr += f'gtkwave::/Edit/Data_Format/{radix_conv} {{{fullname}}}\n'
 
         super().process_disp(tree)
