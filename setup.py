@@ -34,4 +34,10 @@ setup(name='wavedisp',
       packages=['wavedisp'],
       install_requires=[],
       entry_points={'console_scripts': ['wavedisp=wavedisp.cli:main']},
-      zip_safe=False)
+      zip_safe=False,
+      classifiers=["Programming Language :: Python :: 3",
+                   "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+                   "Operating System :: OS Independent",
+                   "Development Status :: 4 - Beta",
+                   "Environment :: Console",
+                   "Intended Audience :: Developers"])
