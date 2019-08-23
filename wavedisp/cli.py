@@ -26,8 +26,9 @@ import argparse
 import json
 
 from wavedisp.ast import Block
-from wavedisp.targets.modelsim import ModelsimTarget
 from wavedisp.targets.gtkwave import GTKWaveTarget
+from wavedisp.targets.modelsim import ModelsimTarget
+from wavedisp.targets.rivierapro import RivieraProTarget
 
 
 class LoggingLevelCounterHandler(logging.Handler):
@@ -78,33 +79,25 @@ def main():
     block.forward()
 
     if args.target == 'gtkwave':
-        gtkwave_target = GTKWaveTarget(block)
-        try:
-            fmod = open(args.output, 'w')
-            fmod.write(gtkwave_target.genstr)
-            fmod.close()
-        except EnvironmentError:
-            logger.error('cannot write to "%s"', args.output)
-
+        target = GTKWaveTarget(block)
     elif args.target == 'modelsim':
-        modelsim_target = ModelsimTarget(block)
-        try:
-            fmod = open(args.output, 'w')
-            fmod.write(modelsim_target.genstr)
-            fmod.close()
-        except EnvironmentError:
-            logger.error('cannot write to "%s"', args.output)
-
+        target = ModelsimTarget(block)
     elif args.target == 'rivierapro':
-        pass
-
+        target = RivieraProTarget(block)
     elif args.target == 'dot':
         fmod = open(args.output, 'w')
         fmod.write(str(block.children[0]))
         fmod.close()
-
     else:
         logger.error('target "%s" not supported', args.target)
+        exit(1)
+
+    try:
+        fmod = open(args.output, 'w')
+        fmod.write(target.genstr)
+        fmod.close()
+    except EnvironmentError:
+        logger.error('cannot write to "%s"', args.output)
 
     if 'ERROR' in LoggingLevelCounterHandler.level_counter:
         if LoggingLevelCounterHandler.level_counter['ERROR'] != 0:
