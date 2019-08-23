@@ -42,7 +42,7 @@ class ModelsimTarget(Visitor):
 
     def __init__(self, tree):
         self.state = {'group': []}
-        self.genstr = '# Wavedisp generated modelsim file\n\nonerror {resume}\n'
+        self.genstr = '# Wavedisp generated Mentor/Modelsim file\n\nonerror {resume}\n'
         self.visit(tree)
         self.genstr += '\nupdate\n'
 
