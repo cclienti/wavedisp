@@ -26,8 +26,8 @@ import argparse
 import json
 
 from wavedisp.ast import Block
-from wavedisp.target_modelsim import ModelsimTarget
-from wavedisp.target_gtkwave import GTKWaveTarget
+from wavedisp.targets.modelsim import ModelsimTarget
+from wavedisp.targets.gtkwave import GTKWaveTarget
 
 
 class LoggingLevelCounterHandler(logging.Handler):

@@ -23,7 +23,7 @@
 import unittest
 
 from wavedisp.ast import Hierarchy, Divider, Disp, Group, Block, ASTBase
-from wavedisp.target_modelsim import ModelsimTarget
+from wavedisp.targets.modelsim import ModelsimTarget
 
 
 MODELSIM_GENERATOR_REF = """# Wavedisp generated modelsim file

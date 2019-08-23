@@ -22,8 +22,8 @@
 
 import logging
 
-from .visitor import Visitor
 from .x11colors import X11_COLORS
+from ..visitor import Visitor
 
 
 LOGGER = logging.getLogger('wavegen')

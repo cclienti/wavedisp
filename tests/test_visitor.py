@@ -22,8 +22,8 @@
 
 import unittest
 
-from wavedisp.visitor import Visitor
 from wavedisp.ast import Hierarchy, Divider, Disp, Group, Block, ASTBase
+from wavedisp.visitor import Visitor
 
 
 class VisitorImpl(Visitor):

@@ -23,7 +23,7 @@
 import unittest
 
 from wavedisp.ast import Hierarchy, Divider, Disp, Group, Block, ASTBase
-from wavedisp.target_gtkwave import GTKWaveTarget
+from wavedisp.targets.gtkwave import GTKWaveTarget
 
 
 GTKWAVE_GENERATOR_REF = """# Wavedisp generated gtkwave file
