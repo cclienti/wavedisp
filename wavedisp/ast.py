@@ -267,6 +267,7 @@ class ASTNode(ASTBase):
             filename = os.path.join(search_path, filename)
 
         try:
+            LOGGER.info('%s:%i: including "%s", generator "%s"', inc_file, inc_line, filename, generator)
             module_list = os.path.basename(filename).split('.')
             module_name = '_'.join(module_list[:-1])
             spec = importlib.util.spec_from_file_location(module_name, filename)
