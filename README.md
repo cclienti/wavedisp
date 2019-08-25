@@ -9,4 +9,4 @@ Wavedisp is distributed under the GPLv3, the complete license description can be
 [here](http://www.gnu.org/licenses/gpl-3.0.html).
 
 ## General information
-The documentation will be available soon [here](https://wavecruncher.net). Of course, contribution are welcomed.
+An example of use is available [here](https://wavecruncher.net/wavedisp). Of course, contribution are welcomed.
