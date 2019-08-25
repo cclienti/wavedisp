@@ -62,12 +62,21 @@ def main():
                         help='generator function name in the input file')
     parser.add_argument('-a', '--kwargs', default='{}',
                         help='arguments dictionary for the generator function in json')
+    parser.add_argument('-v', '--verbose', action='store_true', help='verbose mode')
+    parser.add_argument('-d', '--debug', action='store_true', help='debug mode')
 
     args = parser.parse_args()
 
+    log_level = logging.WARNING
+    if args.debug:
+        log_level = logging.DEBUG
+    elif args.verbose:
+        log_level = logging.INFO
+
     logging.basicConfig(format='[%(asctime)s][%(process)d][%(name)s][%(levelname)s] %(message)s',
                         datefmt='%d-%b-%y %H:%M:%S', handlers=[logging.StreamHandler(),
-                                                               LoggingLevelCounterHandler()])
+                                                               LoggingLevelCounterHandler()],
+                        level=log_level)
 
     logger = logging.getLogger('wavegen:cli')
 
