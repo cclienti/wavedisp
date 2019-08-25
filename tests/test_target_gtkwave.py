@@ -123,6 +123,7 @@ class TestGTKWaveTarget(unittest.TestCase):
     def test_target_gtkwave(self):
         """Test the gtkwave generator."""
 
+        self.maxDiff = None
         ASTBase.reset_unique_id()
 
         # Create the waveforms AST

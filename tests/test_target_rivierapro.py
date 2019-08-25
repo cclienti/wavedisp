@@ -23,35 +23,38 @@
 import unittest
 
 from wavedisp.ast import Hierarchy, Divider, Disp, Group, Block, ASTBase
-from wavedisp.targets.modelsim import ModelsimTarget
+from wavedisp.targets.rivierapro import RivieraProTarget
 
 
-MODELSIM_GENERATOR_REF = """# Wavedisp generated Mentor/Modelsim file
+RIVIERAPRO_GENERATOR_REF = """# Wavedisp generated Aldec/RivieraPro file
 
-onerror {resume}
-
-add wave -divider {Clocks}
+add wave -named_row ""
+add wave -color #0000ff -color_waveform -named_row {Clocks}
 add wave {/tb/top/clock_main}
 add wave {/tb/top/external_pll_valid}
+add wave -named_row ""
+add wave -named_row {The divider}
 
-add wave -divider {The divider}
-add wave -radix binary -group {reset_group} {/tb/top/reset_inst/pcie_rstn}
-add wave -radix hex -group {reset_group} {/tb/top/reset_inst/ethernet_reset}
-add wave -group {reg 0} {/tb/top/reg_inst/register[0]}
-add wave -group {reg 1} {/tb/top/reg_inst/register[1]}
-add wave -group {reg 2} {/tb/top/reg_inst/register[2]}
-add wave -group {reg 3} {/tb/top/reg_inst/register[3]}
-add wave -group {reg 4} {/tb/top/reg_inst/register[4]}
+add wave -vgroup {reset_group} -radix -binary {/tb/top/reset_inst/pcie_rstn} \\
+                               -radix -hex {/tb/top/reset_inst/ethernet_reset}
 
-update
+add wave -vgroup {reg 0} {/tb/top/reg_inst/register[0]}
+
+add wave -vgroup {reg 1} {/tb/top/reg_inst/register[1]}
+
+add wave -vgroup {reg 2} {/tb/top/reg_inst/register[2]}
+
+add wave -vgroup {reg 3} {/tb/top/reg_inst/register[3]}
+
+add wave -vgroup {reg 4} {/tb/top/reg_inst/register[4]}
 """
 
 
-class TestModelsimTarget(unittest.TestCase):
+class TestRivieraProTarget(unittest.TestCase):
     """Test class for Visitor base class."""
 
-    def test_target_modelsim(self):
-        """Test the modelsim generator."""
+    def test_target_rivierapro(self):
+        """Test the rivierapro generator."""
 
         self.maxDiff = None
         ASTBase.reset_unique_id()
@@ -78,13 +81,13 @@ class TestModelsimTarget(unittest.TestCase):
         testbench.forward()
 
         # Generate the tcl waveforms file
-        modelsim = ModelsimTarget(testbench)
-        ftcl = open('test_target_modelsim.tcl', 'w')
-        ftcl.write(modelsim.genstr)
+        rivierapro = RivieraProTarget(testbench)
+        ftcl = open('test_target_rivierapro.tcl', 'w')
+        ftcl.write(rivierapro.genstr)
         ftcl.close()
 
         # Check against reference
-        self.assertEqual(modelsim.genstr, MODELSIM_GENERATOR_REF)
+        self.assertEqual(rivierapro.genstr, RIVIERAPRO_GENERATOR_REF)
 
 
 if __name__ == '__main__':
