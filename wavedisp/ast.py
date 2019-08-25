@@ -23,6 +23,7 @@
 import logging
 import inspect
 import importlib
+import importlib.util  # importlib does not import util
 import re
 import os
 
