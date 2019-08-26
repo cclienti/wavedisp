@@ -97,6 +97,7 @@ def main():
         fmod = open(args.output, 'w')
         fmod.write(str(block.children[0]))
         fmod.close()
+        exit(0)
     else:
         logger.error('target "%s" not supported', args.target)
         exit(1)
@@ -110,7 +111,7 @@ def main():
 
     if 'ERROR' in LoggingLevelCounterHandler.level_counter:
         if LoggingLevelCounterHandler.level_counter['ERROR'] != 0:
-            sys.exit(1)
+            exit(1)
 
 
 if __name__ == '__main__':
