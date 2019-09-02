@@ -275,6 +275,11 @@ class ASTNode(ASTBase):
             spec.loader.exec_module(dest)
 
             tree = getattr(dest, generator)(**kwargs)
+            if tree is None:
+                LOGGER.error('%s:%i: failed to include "%s": the generator returned nothing',
+                             inc_file, inc_line, filename)
+                return None
+
             self.children.append(tree)
             return tree
 
