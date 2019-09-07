@@ -119,7 +119,7 @@ class GTKWaveTarget(Visitor):
             for name in self.stack[-1]:
                 self.genstr += f'gtkwave::/Edit/Highlight_Regexp {{^{name}}}\n'
             self.genstr += f'gtkwave::/Edit/Create_Group {{{tree.value[0]}}}\n'
-            self.genstr += 'gtkwave::/Edit/UnHighlight_All\n'
+            self.genstr += f'gtkwave::/Edit/UnHighlight_All\n'
 
         # The current list in the stack is processed, we can remove it.
         self.stack.pop()
@@ -158,7 +158,9 @@ class GTKWaveTarget(Visitor):
                 if radix != '':
                     try:
                         radix_conv = self.RadixDict[radix]
-                        self.genstr += f'gtkwave::/Edit/Data_Format/{radix_conv} {{{fullname}}}\n'
+                        self.genstr += f'gtkwave::/Edit/Highlight_Regexp {{^{fullname}}}\n'
+                        self.genstr += f'gtkwave::/Edit/Data_Format/{radix_conv}\n'
+                        self.genstr += f'gtkwave::/Edit/UnHighlight_All\n'
                     except KeyError:
                         LOGGER.error('%s:%i: unkown radix type "%s"',
                                      tree.filename, tree.line, radix)
@@ -171,8 +173,9 @@ class GTKWaveTarget(Visitor):
                         found_color = self.nearest_color(color)
 
                         # Write the result
-                        self.genstr += f'gtkwave::/Edit/Color_Format/{found_color} {{{fullname}}}\n'
-
+                        self.genstr += f'gtkwave::/Edit/Highlight_Regexp {{^{fullname}}}\n'
+                        self.genstr += f'gtkwave::/Edit/Color_Format/{found_color}\n'
+                        self.genstr += f'gtkwave::/Edit/UnHighlight_All\n'
                     except KeyError:
                         LOGGER.error('%s:%i: unkown color "%s"', tree.filename, tree.line, color)
 
