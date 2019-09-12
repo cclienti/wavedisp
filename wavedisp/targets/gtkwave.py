@@ -21,6 +21,7 @@
 """Generator for the GTKWave viewer."""
 
 import logging
+import re
 
 from .x11colors import X11_COLORS
 from ..visitor import Visitor
@@ -117,7 +118,8 @@ class GTKWaveTarget(Visitor):
         if self.stack[-1]:
             self.genstr += 'gtkwave::/Edit/UnHighlight_All\n'
             for name in self.stack[-1]:
-                self.genstr += f'gtkwave::/Edit/Highlight_Regexp {{^{name}}}\n'
+                name_esc = re.escape(name)
+                self.genstr += f'gtkwave::/Edit/Highlight_Regexp {{^{name_esc}}}\n'
             self.genstr += f'gtkwave::/Edit/Create_Group {{{tree.value[0]}}}\n'
             self.genstr += f'gtkwave::/Edit/UnHighlight_All\n'
 
@@ -147,6 +149,7 @@ class GTKWaveTarget(Visitor):
         for value in tree.value:
             hierarchy = tree.hierarchy.split('/')
             fullname = '.'.join(hierarchy[1:]) + '.' + value
+            fullname_esc = re.escape(fullname)
 
             if self.stack:
                 self.stack[-1].append(fullname)
@@ -158,7 +161,7 @@ class GTKWaveTarget(Visitor):
                 if radix != '':
                     try:
                         radix_conv = self.RadixDict[radix]
-                        self.genstr += f'gtkwave::/Edit/Highlight_Regexp {{^{fullname}}}\n'
+                        self.genstr += f'gtkwave::/Edit/Highlight_Regexp {{^{fullname_esc}}}\n'
                         self.genstr += f'gtkwave::/Edit/Data_Format/{radix_conv}\n'
                         self.genstr += f'gtkwave::/Edit/UnHighlight_All\n'
                     except KeyError:
@@ -173,7 +176,7 @@ class GTKWaveTarget(Visitor):
                         found_color = self.nearest_color(color)
 
                         # Write the result
-                        self.genstr += f'gtkwave::/Edit/Highlight_Regexp {{^{fullname}}}\n'
+                        self.genstr += f'gtkwave::/Edit/Highlight_Regexp {{^{fullname_esc}}}\n'
                         self.genstr += f'gtkwave::/Edit/Color_Format/{found_color}\n'
                         self.genstr += f'gtkwave::/Edit/UnHighlight_All\n'
                     except KeyError:
