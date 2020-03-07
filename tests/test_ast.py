@@ -20,6 +20,7 @@
 
 """Test AST classes."""
 
+import os
 import unittest
 
 from wavedisp.ast import Hierarchy, Divider, Disp, Group, Block, ASTBase
@@ -31,26 +32,42 @@ from .test_ast_refs import REF_AST_INCLUDE
 class TestAST(unittest.TestCase):
     """Test class for AST classes."""
 
+    def setUp(self):
+        self.maxDiff=None
+        self.reset_line()
+        self.cpath = os.path.dirname(os.path.realpath(__file__))
+
+    def get_line(self):
+        self.line += 1
+        return self.line
+
+    def reset_line(self):
+        self.line = 0
+
     def test_dot_rendering(self):
         """Test the graphviz (dot) rendering."""
 
+
         ASTBase.reset_unique_id()
+        self.reset_line()
+        filename = "test_dot_rendering.py"
+        meta = lambda: {"__filename": filename, "__line": self.get_line()}
 
-        testbench = Hierarchy('/tb')
-        testbench.add(Divider('Clocks', color='blue'))
+        testbench = Hierarchy('/tb', **meta())
+        testbench.add(Divider('Clocks', color='blue', **meta()))
 
-        top = testbench.add(Hierarchy('top'))
-        top.add(Disp(['clock_main', 'external_pll_valid']))
-        top.add(Divider('The divider'))
+        top = testbench.add(Hierarchy('top', **meta()))
+        top.add(Disp(['clock_main', 'external_pll_valid'], **meta()))
+        top.add(Divider('The divider', **meta()))
 
-        group = top.add(Group('reset_group', radix='binary'))
-        group.add(Disp('reset_inst/pcie_rstn'))
-        group.add(Disp('reset_inst/ethernet_reset'))
+        group = top.add(Group('reset_group', radix='binary', **meta()))
+        group.add(Disp('reset_inst/pcie_rstn', **meta()))
+        group.add(Disp('reset_inst/ethernet_reset', **meta()))
 
-        hier = top.add(Hierarchy('reg_inst'))
+        hier = top.add(Hierarchy('reg_inst', **meta()))
         for i in range(0, 5):
-            grp = hier.add(Group(f'reg {i}'))
-            grp.add(Disp(f'register[{i}]'))
+            grp = hier.add(Group(f'reg {i}', **meta()))
+            grp.add(Disp(f'register[{i}]', **meta()))
 
         rendered = str(testbench)
         frendered = open('test_ast_dot_testbench.dot', 'w')
@@ -66,22 +83,25 @@ class TestAST(unittest.TestCase):
         """
 
         ASTBase.reset_unique_id()
+        self.reset_line()
+        filename = "test_ast_forward.py"
+        meta = lambda: {"__filename": filename, "__line": self.get_line()}
 
-        testbench = Hierarchy('/tb', radix='hexadecimal')
-        testbench.add(Divider('Clocks', color='blue'))
+        testbench = Hierarchy('/tb', radix='hexadecimal', **meta())
+        testbench.add(Divider('Clocks', color='blue', **meta()))
 
-        top = testbench.add(Hierarchy('top'))
-        top.add(Disp(['clock_main', 'external_pll_valid']))
-        top.add(Divider('The divider'))
+        top = testbench.add(Hierarchy('top', **meta()))
+        top.add(Disp(['clock_main', 'external_pll_valid'], **meta()))
+        top.add(Divider('The divider', **meta()))
 
-        group = top.add(Group('reset_group', radix='binary'))
-        group.add(Disp('reset_inst/pcie_rstn', radix='octal'))
-        group.add(Disp('reset_inst/ethernet_reset'))
+        group = top.add(Group('reset_group', radix='binary', **meta()))
+        group.add(Disp('reset_inst/pcie_rstn', radix='octal', **meta()))
+        group.add(Disp('reset_inst/ethernet_reset', **meta()))
 
-        hier = top.add(Hierarchy('reg_inst', color='blue'))
+        hier = top.add(Hierarchy('reg_inst', color='blue', **meta()))
         for i in range(0, 5):
-            grp = hier.add(Group(f'reg {i}', color='red'))
-            grp.add(Disp(f'register[{i}]', color='yellow'))
+            grp = hier.add(Group(f'reg {i}', color='red', **meta()))
+            grp.add(Disp(f'register[{i}]', color='yellow', **meta()))
 
         testbench.forward()
         rendered = str(testbench)
@@ -95,25 +115,25 @@ class TestAST(unittest.TestCase):
         """Test the include mechanism."""
 
         ASTBase.reset_unique_id()
+        self.reset_line()
+        filename = "test_ast_include.py"
+        meta = lambda: {"__filename": filename, "__line": self.get_line()}
 
-        import os
-        cpath = os.path.dirname(os.path.realpath(__file__))
+        testbench = Hierarchy('/tb', radix='hexadecimal', **meta())
+        testbench.add(Divider('Clocks', color='blue', **meta()))
 
-        testbench = Hierarchy('/tb', radix='hexadecimal')
-        testbench.add(Divider('Clocks', color='blue'))
+        top = testbench.add(Hierarchy('top', **meta()))
+        top.add(Disp(['clock_main', 'external_pll_valid'], **meta()))
+        top.add(Divider('The divider', **meta()))
 
-        top = testbench.add(Hierarchy('top'))
-        top.add(Disp(['clock_main', 'external_pll_valid']))
-        top.add(Divider('The divider'))
+        group = top.add(Group('reset_group', radix='binary', **meta()))
+        group.add(Disp('reset_inst/pcie_rstn', radix='octal', **meta()))
+        group.add(Disp('reset_inst/ethernet_reset', **meta()))
 
-        group = top.add(Group('reset_group', radix='binary'))
-        group.add(Disp('reset_inst/pcie_rstn', radix='octal'))
-        group.add(Disp('reset_inst/ethernet_reset'))
-
-        hier = top.add(Hierarchy('reg_inst', color='blue'))
+        hier = top.add(Hierarchy('reg_inst', color='blue', **meta()))
         for i in range(0, 5):
-            blk = hier.add(Block(radix='octal'))
-            blk.include(f'{cpath}/test_ast_include_file.py', index=i)
+            blk = hier.add(Block(radix='octal', **meta()))
+            blk.include(f'{self.cpath}/test_ast_include_file.py', index=i)
 
         testbench.forward()
         rendered = str(testbench)
@@ -121,7 +141,10 @@ class TestAST(unittest.TestCase):
         frendered.write(rendered)
         frendered.close()
 
-        self.assertEqual(str(testbench), REF_AST_INCLUDE)
+        ref = REF_AST_INCLUDE.replace("test_ast_include_file.py",
+                                      f"{self.cpath}/test_ast_include_file.py")
+
+        self.assertEqual(str(testbench), ref)
 
 
 if __name__ == '__main__':
