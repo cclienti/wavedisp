@@ -12,6 +12,7 @@ pylint: venv3
 
 pytest: venv3
 	source venv3/bin/activate && $@
+	sed -i 's/></>\n</g' tests.xml
 
 upload-pypi: install-pypy-test
 	source venv3/bin/activate && twine upload -u $$PYPI_PROD_USER -p $$PYPI_PROD_PASSWORD dist/*
