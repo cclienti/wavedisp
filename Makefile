@@ -10,7 +10,7 @@ pylint: venv3
 	source venv3/bin/activate && pylint-fail-under --fail_under $(PYLINT_SCORE) $(PROJECT_DIR) $(TESTS_DIR)
 
 pytest: venv3
-	source venv3/bin/activate && $@ $(PROJECT_DIR)
+	source venv3/bin/activate && $@
 
 upload: test-install
 	source venv3/bin/activate && twine upload -u $$PYPI_PROD_USER -p $$PYPI_PROD_PASSWORD dist/*
@@ -30,8 +30,11 @@ dist: venv3
 
 venv3:
 	python3 -m venv venv3
+	source venv3/bin/activate && pip install --upgrade pip
 	source venv3/bin/activate && \
 	    pip install flake8 pylint twine pytest pytest-cov pylint-fail-under
 
 clean:
-	rm -rf dist venv3 test-install test-upload upload test_*.dot test_*.tcl tests.xml coverage.xml
+	rm -rf dist venv3 test-install test-upload upload
+	rm -rf $(PROJECT_DIR).egg-info
+	rm -rf test_*.dot test_*.tcl tests.xml coverage.xml htmlcov

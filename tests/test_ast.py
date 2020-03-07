@@ -33,7 +33,7 @@ class TestAST(unittest.TestCase):
     """Test class for AST classes."""
 
     def setUp(self):
-        self.maxDiff=None
+        self.maxDiff = None
         self.reset_line()
         self.cpath = os.path.dirname(os.path.realpath(__file__))
 
@@ -47,11 +47,11 @@ class TestAST(unittest.TestCase):
     def test_dot_rendering(self):
         """Test the graphviz (dot) rendering."""
 
+        def meta():
+            return {"__filename": "test_dot_rendering.py", "__line": self.get_line()}
 
         ASTBase.reset_unique_id()
         self.reset_line()
-        filename = "test_dot_rendering.py"
-        meta = lambda: {"__filename": filename, "__line": self.get_line()}
 
         testbench = Hierarchy('/tb', **meta())
         testbench.add(Divider('Clocks', color='blue', **meta()))
@@ -82,10 +82,11 @@ class TestAST(unittest.TestCase):
 
         """
 
+        def meta():
+            return {"__filename": "test_ast_forward.py", "__line": self.get_line()}
+
         ASTBase.reset_unique_id()
         self.reset_line()
-        filename = "test_ast_forward.py"
-        meta = lambda: {"__filename": filename, "__line": self.get_line()}
 
         testbench = Hierarchy('/tb', radix='hexadecimal', **meta())
         testbench.add(Divider('Clocks', color='blue', **meta()))
@@ -114,10 +115,11 @@ class TestAST(unittest.TestCase):
     def test_include(self):
         """Test the include mechanism."""
 
+        def meta():
+            return {"__filename": "test_ast_include.py", "__line": self.get_line()}
+
         ASTBase.reset_unique_id()
         self.reset_line()
-        filename = "test_ast_include.py"
-        meta = lambda: {"__filename": filename, "__line": self.get_line()}
 
         testbench = Hierarchy('/tb', radix='hexadecimal', **meta())
         testbench.add(Divider('Clocks', color='blue', **meta()))

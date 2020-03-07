@@ -20,7 +20,6 @@
 
 """Command line interface."""
 
-import sys
 import logging
 import argparse
 import json
