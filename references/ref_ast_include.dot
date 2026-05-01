@@ -83,14 +83,14 @@ digraph G {
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: test_ast_include_file.py</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 7</TD></TR></TABLE> >];
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 8</TD></TR></TABLE> >];
     n11 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['register[0]']</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: test_ast_include_file.py</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 8</TD></TR></TABLE> >];
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 9</TD></TR></TABLE> >];
     n10 -> n11;
     n9 -> n10;
     n8 -> n9;
@@ -107,14 +107,14 @@ digraph G {
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: test_ast_include_file.py</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 7</TD></TR></TABLE> >];
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 8</TD></TR></TABLE> >];
     n14 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['register[1]']</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: test_ast_include_file.py</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 8</TD></TR></TABLE> >];
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 9</TD></TR></TABLE> >];
     n13 -> n14;
     n12 -> n13;
     n8 -> n12;
@@ -131,14 +131,14 @@ digraph G {
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: test_ast_include_file.py</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 7</TD></TR></TABLE> >];
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 8</TD></TR></TABLE> >];
     n17 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['register[2]']</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: test_ast_include_file.py</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 8</TD></TR></TABLE> >];
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 9</TD></TR></TABLE> >];
     n16 -> n17;
     n15 -> n16;
     n8 -> n15;
@@ -155,14 +155,14 @@ digraph G {
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: test_ast_include_file.py</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 7</TD></TR></TABLE> >];
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 8</TD></TR></TABLE> >];
     n20 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['register[3]']</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: test_ast_include_file.py</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 8</TD></TR></TABLE> >];
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 9</TD></TR></TABLE> >];
     n19 -> n20;
     n18 -> n19;
     n8 -> n18;
@@ -179,14 +179,14 @@ digraph G {
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: test_ast_include_file.py</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 7</TD></TR></TABLE> >];
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 8</TD></TR></TABLE> >];
     n23 [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">
         <TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>Disp</b></FONT></TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>value</b>: ['register[4]']</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>hierarchy</b>: /tb/top/reg_inst</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>properties</b>: {'color': 'blue', 'height': '', 'radix': 'octal'}</TD></TR>
         <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>filename</b>: test_ast_include_file.py</TD></TR>
-        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 8</TD></TR></TABLE> >];
+        <TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>line</b>: 9</TD></TR></TABLE> >];
     n22 -> n23;
     n21 -> n22;
     n8 -> n21;
