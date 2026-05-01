@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of wavedisp. See the root README.md for further
 # information.

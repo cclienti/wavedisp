@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of wavedisp. See the root README.md for further
 # information.
@@ -21,7 +20,6 @@
 """References for AST Tests."""
 
 import os
-
 
 CPATH = os.path.dirname(os.path.realpath(__file__))
 

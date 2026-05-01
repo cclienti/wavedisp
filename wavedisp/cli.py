@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of wavedisp. See the root README.md for further
 # information.
@@ -20,9 +19,9 @@
 
 """Command line interface."""
 
-import logging
 import argparse
 import json
+import logging
 
 from wavedisp.ast import Block
 from wavedisp.targets.gtkwave import GTKWaveTarget
@@ -47,22 +46,28 @@ class LoggingLevelCounterHandler(logging.Handler):
 def main():
     """Command line interface entry point."""
 
-    description = 'Wavedisp, the waveforms file generator'
-    parser = argparse.ArgumentParser(description=description,
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    description = "Wavedisp, the waveforms file generator"
+    parser = argparse.ArgumentParser(description=description, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('input', help='input file')
-    parser.add_argument('-o', '--output', help='output filename')
+    parser.add_argument("input", help="input file")
+    parser.add_argument("-o", "--output", help="output filename")
 
-    parser.add_argument('-t', '--target', type=str, default='gtkwave',
-                        help=('targeted simulator for the generated waveforms file, '
-                              'available targets: gtkwave, modelsim, rivierapro and dot (graphviz)'))
-    parser.add_argument('-g', '--generator', type=str, default='generator',
-                        help='generator function name in the input file')
-    parser.add_argument('-a', '--kwargs', default='{}',
-                        help='arguments dictionary for the generator function in json')
-    parser.add_argument('-v', '--verbose', action='store_true', help='verbose mode')
-    parser.add_argument('-d', '--debug', action='store_true', help='debug mode')
+    parser.add_argument(
+        "-t",
+        "--target",
+        type=str,
+        default="gtkwave",
+        help=(
+            "targeted simulator for the generated waveforms file, "
+            "available targets: gtkwave, modelsim, rivierapro and dot (graphviz)"
+        ),
+    )
+    parser.add_argument(
+        "-g", "--generator", type=str, default="generator", help="generator function name in the input file"
+    )
+    parser.add_argument("-a", "--kwargs", default="{}", help="arguments dictionary for the generator function in json")
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose mode")
+    parser.add_argument("-d", "--debug", action="store_true", help="debug mode")
 
     args = parser.parse_args()
 
@@ -72,28 +77,30 @@ def main():
     elif args.verbose:
         log_level = logging.INFO
 
-    logging.basicConfig(format='[%(asctime)s][%(process)d][%(name)s][%(levelname)s] %(message)s',
-                        datefmt='%d-%b-%y %H:%M:%S', handlers=[logging.StreamHandler(),
-                                                               LoggingLevelCounterHandler()],
-                        level=log_level)
+    logging.basicConfig(
+        format="[%(asctime)s][%(process)d][%(name)s][%(levelname)s] %(message)s",
+        datefmt="%d-%b-%y %H:%M:%S",
+        handlers=[logging.StreamHandler(), LoggingLevelCounterHandler()],
+        level=log_level,
+    )
 
-    logger = logging.getLogger('wavegen:cli')
+    logger = logging.getLogger("wavegen:cli")
 
     kwargs = json.loads(args.kwargs)
-    kwargs['__generator'] = args.generator
+    kwargs["__generator"] = args.generator
 
     block = Block(__filename=args.input, __line=0)
     block.include(args.input, **kwargs)
     block.forward()
 
-    if args.target == 'gtkwave':
+    if args.target == "gtkwave":
         target = GTKWaveTarget(block)
-    elif args.target == 'modelsim':
+    elif args.target == "modelsim":
         target = ModelsimTarget(block)
-    elif args.target == 'rivierapro':
+    elif args.target == "rivierapro":
         target = RivieraProTarget(block)
-    elif args.target == 'dot':
-        fmod = open(args.output, 'w')
+    elif args.target == "dot":
+        fmod = open(args.output, "w")
         fmod.write(str(block.children[0]))
         fmod.close()
         exit(0)
@@ -102,16 +109,16 @@ def main():
         exit(1)
 
     try:
-        fmod = open(args.output, 'w')
+        fmod = open(args.output, "w")
         fmod.write(target.genstr)
         fmod.close()
-    except EnvironmentError:
+    except OSError:
         logger.error('cannot write to "%s"', args.output)
 
-    if 'ERROR' in LoggingLevelCounterHandler.level_counter:
-        if LoggingLevelCounterHandler.level_counter['ERROR'] != 0:
+    if "ERROR" in LoggingLevelCounterHandler.level_counter:
+        if LoggingLevelCounterHandler.level_counter["ERROR"] != 0:
             exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of wavedisp. See the root README.md for further
 # information.
@@ -54,7 +53,7 @@ class Visitor:
             self.process_disp(tree)
 
         else:
-            raise TypeError(f'{type(tree)} not managed by {type(self)} class')
+            raise TypeError(f"{type(tree)} not managed by {type(self)} class")
 
     def visit_children(self, tree):
         """Recurse by visiting each child.

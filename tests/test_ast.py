@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of wavedisp. See the root README.md for further
 # information.
@@ -23,10 +22,9 @@
 import os
 import unittest
 
-from wavedisp.ast import Hierarchy, Divider, Disp, Group, Block, ASTBase
-from .test_ast_refs import REF_AST_DOT_RENDERING
-from .test_ast_refs import REF_AST_FORWARD
-from .test_ast_refs import REF_AST_INCLUDE
+from wavedisp.ast import ASTBase, Block, Disp, Divider, Group, Hierarchy
+
+from .test_ast_refs import REF_AST_DOT_RENDERING, REF_AST_FORWARD, REF_AST_INCLUDE
 
 
 class TestAST(unittest.TestCase):
@@ -53,24 +51,24 @@ class TestAST(unittest.TestCase):
         ASTBase.reset_unique_id()
         self.reset_line()
 
-        testbench = Hierarchy('/tb', **meta())
-        testbench.add(Divider('Clocks', color='blue', **meta()))
+        testbench = Hierarchy("/tb", **meta())
+        testbench.add(Divider("Clocks", color="blue", **meta()))
 
-        top = testbench.add(Hierarchy('top', **meta()))
-        top.add(Disp(['clock_main', 'external_pll_valid'], **meta()))
-        top.add(Divider('The divider', **meta()))
+        top = testbench.add(Hierarchy("top", **meta()))
+        top.add(Disp(["clock_main", "external_pll_valid"], **meta()))
+        top.add(Divider("The divider", **meta()))
 
-        group = top.add(Group('reset_group', radix='binary', **meta()))
-        group.add(Disp('reset_inst/pcie_rstn', **meta()))
-        group.add(Disp('reset_inst/ethernet_reset', **meta()))
+        group = top.add(Group("reset_group", radix="binary", **meta()))
+        group.add(Disp("reset_inst/pcie_rstn", **meta()))
+        group.add(Disp("reset_inst/ethernet_reset", **meta()))
 
-        hier = top.add(Hierarchy('reg_inst', **meta()))
+        hier = top.add(Hierarchy("reg_inst", **meta()))
         for i in range(0, 5):
-            grp = hier.add(Group(f'reg {i}', **meta()))
-            grp.add(Disp(f'register[{i}]', **meta()))
+            grp = hier.add(Group(f"reg {i}", **meta()))
+            grp.add(Disp(f"register[{i}]", **meta()))
 
         rendered = str(testbench)
-        frendered = open('test_ast_dot_testbench.dot', 'w')
+        frendered = open("test_ast_dot_testbench.dot", "w")
         frendered.write(rendered)
         frendered.close()
 
@@ -88,25 +86,25 @@ class TestAST(unittest.TestCase):
         ASTBase.reset_unique_id()
         self.reset_line()
 
-        testbench = Hierarchy('/tb', radix='hexadecimal', **meta())
-        testbench.add(Divider('Clocks', color='blue', **meta()))
+        testbench = Hierarchy("/tb", radix="hexadecimal", **meta())
+        testbench.add(Divider("Clocks", color="blue", **meta()))
 
-        top = testbench.add(Hierarchy('top', **meta()))
-        top.add(Disp(['clock_main', 'external_pll_valid'], **meta()))
-        top.add(Divider('The divider', **meta()))
+        top = testbench.add(Hierarchy("top", **meta()))
+        top.add(Disp(["clock_main", "external_pll_valid"], **meta()))
+        top.add(Divider("The divider", **meta()))
 
-        group = top.add(Group('reset_group', radix='binary', **meta()))
-        group.add(Disp('reset_inst/pcie_rstn', radix='octal', **meta()))
-        group.add(Disp('reset_inst/ethernet_reset', **meta()))
+        group = top.add(Group("reset_group", radix="binary", **meta()))
+        group.add(Disp("reset_inst/pcie_rstn", radix="octal", **meta()))
+        group.add(Disp("reset_inst/ethernet_reset", **meta()))
 
-        hier = top.add(Hierarchy('reg_inst', color='blue', **meta()))
+        hier = top.add(Hierarchy("reg_inst", color="blue", **meta()))
         for i in range(0, 5):
-            grp = hier.add(Group(f'reg {i}', color='red', **meta()))
-            grp.add(Disp(f'register[{i}]', color='yellow', **meta()))
+            grp = hier.add(Group(f"reg {i}", color="red", **meta()))
+            grp.add(Disp(f"register[{i}]", color="yellow", **meta()))
 
         testbench.forward()
         rendered = str(testbench)
-        frendered = open('test_ast_forward.dot', 'w')
+        frendered = open("test_ast_forward.dot", "w")
         frendered.write(rendered)
         frendered.close()
 
@@ -121,33 +119,32 @@ class TestAST(unittest.TestCase):
         ASTBase.reset_unique_id()
         self.reset_line()
 
-        testbench = Hierarchy('/tb', radix='hexadecimal', **meta())
-        testbench.add(Divider('Clocks', color='blue', **meta()))
+        testbench = Hierarchy("/tb", radix="hexadecimal", **meta())
+        testbench.add(Divider("Clocks", color="blue", **meta()))
 
-        top = testbench.add(Hierarchy('top', **meta()))
-        top.add(Disp(['clock_main', 'external_pll_valid'], **meta()))
-        top.add(Divider('The divider', **meta()))
+        top = testbench.add(Hierarchy("top", **meta()))
+        top.add(Disp(["clock_main", "external_pll_valid"], **meta()))
+        top.add(Divider("The divider", **meta()))
 
-        group = top.add(Group('reset_group', radix='binary', **meta()))
-        group.add(Disp('reset_inst/pcie_rstn', radix='octal', **meta()))
-        group.add(Disp('reset_inst/ethernet_reset', **meta()))
+        group = top.add(Group("reset_group", radix="binary", **meta()))
+        group.add(Disp("reset_inst/pcie_rstn", radix="octal", **meta()))
+        group.add(Disp("reset_inst/ethernet_reset", **meta()))
 
-        hier = top.add(Hierarchy('reg_inst', color='blue', **meta()))
+        hier = top.add(Hierarchy("reg_inst", color="blue", **meta()))
         for i in range(0, 5):
-            blk = hier.add(Block(radix='octal', **meta()))
-            blk.include(f'{self.cpath}/test_ast_include_file.py', index=i)
+            blk = hier.add(Block(radix="octal", **meta()))
+            blk.include(f"{self.cpath}/test_ast_include_file.py", index=i)
 
         testbench.forward()
         rendered = str(testbench)
-        frendered = open('test_ast_include.dot', 'w')
+        frendered = open("test_ast_include.dot", "w")
         frendered.write(rendered)
         frendered.close()
 
-        ref = REF_AST_INCLUDE.replace("test_ast_include_file.py",
-                                      f"{self.cpath}/test_ast_include_file.py")
+        ref = REF_AST_INCLUDE.replace("test_ast_include_file.py", f"{self.cpath}/test_ast_include_file.py")
 
         self.assertEqual(str(testbench), ref)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

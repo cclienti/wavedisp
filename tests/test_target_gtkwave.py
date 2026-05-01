@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of wavedisp. See the root README.md for further
 # information.
@@ -22,9 +21,8 @@
 
 import unittest
 
-from wavedisp.ast import Hierarchy, Divider, Disp, Group, Block, ASTBase
+from wavedisp.ast import ASTBase, Block, Disp, Divider, Group, Hierarchy
 from wavedisp.targets.gtkwave import GTKWaveTarget
-
 
 GTKWAVE_GENERATOR_REF = """# Wavedisp generated gtkwave file
 gtkwave::/Edit/Set_Trace_Max_Hier 0
@@ -108,35 +106,35 @@ class TestGTKWaveTarget(unittest.TestCase):
 
     def test_nearest_color(self):
         """Test the nearest color search."""
-        self.assertEqual(GTKWaveTarget.nearest_color('red'), 'Red')
-        self.assertEqual(GTKWaveTarget.nearest_color('red1'), 'Red')
-        self.assertEqual(GTKWaveTarget.nearest_color('red2'), 'Red')
-        self.assertEqual(GTKWaveTarget.nearest_color('red3'), 'Red')
-        self.assertEqual(GTKWaveTarget.nearest_color('red4'), 'Red')
+        self.assertEqual(GTKWaveTarget.nearest_color("red"), "Red")
+        self.assertEqual(GTKWaveTarget.nearest_color("red1"), "Red")
+        self.assertEqual(GTKWaveTarget.nearest_color("red2"), "Red")
+        self.assertEqual(GTKWaveTarget.nearest_color("red3"), "Red")
+        self.assertEqual(GTKWaveTarget.nearest_color("red4"), "Red")
 
-        self.assertEqual(GTKWaveTarget.nearest_color('orange'), 'Orange')
-        self.assertEqual(GTKWaveTarget.nearest_color('orange1'), 'Orange')
-        self.assertEqual(GTKWaveTarget.nearest_color('orange2'), 'Orange')
-        self.assertEqual(GTKWaveTarget.nearest_color('orange3'), 'Orange')
-        self.assertEqual(GTKWaveTarget.nearest_color('orange4'), 'Orange')
+        self.assertEqual(GTKWaveTarget.nearest_color("orange"), "Orange")
+        self.assertEqual(GTKWaveTarget.nearest_color("orange1"), "Orange")
+        self.assertEqual(GTKWaveTarget.nearest_color("orange2"), "Orange")
+        self.assertEqual(GTKWaveTarget.nearest_color("orange3"), "Orange")
+        self.assertEqual(GTKWaveTarget.nearest_color("orange4"), "Orange")
 
-        self.assertEqual(GTKWaveTarget.nearest_color('yellow'), 'Yellow')
-        self.assertEqual(GTKWaveTarget.nearest_color('yellow1'), 'Yellow')
-        self.assertEqual(GTKWaveTarget.nearest_color('yellow2'), 'Yellow')
-        self.assertEqual(GTKWaveTarget.nearest_color('yellow3'), 'Orange')
-        self.assertEqual(GTKWaveTarget.nearest_color('yellow4'), 'Orange')
+        self.assertEqual(GTKWaveTarget.nearest_color("yellow"), "Yellow")
+        self.assertEqual(GTKWaveTarget.nearest_color("yellow1"), "Yellow")
+        self.assertEqual(GTKWaveTarget.nearest_color("yellow2"), "Yellow")
+        self.assertEqual(GTKWaveTarget.nearest_color("yellow3"), "Orange")
+        self.assertEqual(GTKWaveTarget.nearest_color("yellow4"), "Orange")
 
-        self.assertEqual(GTKWaveTarget.nearest_color('green'), 'Green')
-        self.assertEqual(GTKWaveTarget.nearest_color('green1'), 'Green')
-        self.assertEqual(GTKWaveTarget.nearest_color('green2'), 'Green')
-        self.assertEqual(GTKWaveTarget.nearest_color('green3'), 'Green')
-        self.assertEqual(GTKWaveTarget.nearest_color('green4'), 'Green')
+        self.assertEqual(GTKWaveTarget.nearest_color("green"), "Green")
+        self.assertEqual(GTKWaveTarget.nearest_color("green1"), "Green")
+        self.assertEqual(GTKWaveTarget.nearest_color("green2"), "Green")
+        self.assertEqual(GTKWaveTarget.nearest_color("green3"), "Green")
+        self.assertEqual(GTKWaveTarget.nearest_color("green4"), "Green")
 
-        self.assertEqual(GTKWaveTarget.nearest_color('blue'), 'Blue')
-        self.assertEqual(GTKWaveTarget.nearest_color('blue1'), 'Blue')
-        self.assertEqual(GTKWaveTarget.nearest_color('blue2'), 'Blue')
-        self.assertEqual(GTKWaveTarget.nearest_color('blue3'), 'Blue')
-        self.assertEqual(GTKWaveTarget.nearest_color('blue4'), 'Indigo')
+        self.assertEqual(GTKWaveTarget.nearest_color("blue"), "Blue")
+        self.assertEqual(GTKWaveTarget.nearest_color("blue1"), "Blue")
+        self.assertEqual(GTKWaveTarget.nearest_color("blue2"), "Blue")
+        self.assertEqual(GTKWaveTarget.nearest_color("blue3"), "Blue")
+        self.assertEqual(GTKWaveTarget.nearest_color("blue4"), "Indigo")
 
     def test_target_gtkwave(self):
         """Test the gtkwave generator."""
@@ -145,29 +143,29 @@ class TestGTKWaveTarget(unittest.TestCase):
         ASTBase.reset_unique_id()
 
         # Create the waveforms AST
-        testbench = Hierarchy('/tb')
-        testbench.add(Divider('Clocks', color='blue'))
+        testbench = Hierarchy("/tb")
+        testbench.add(Divider("Clocks", color="blue"))
 
-        top = testbench.add(Hierarchy('top'))
-        top.add(Disp(['clock_main', 'external_pll_valid']))
-        top.add(Divider('The divider'))
+        top = testbench.add(Hierarchy("top"))
+        top.add(Disp(["clock_main", "external_pll_valid"]))
+        top.add(Divider("The divider"))
 
-        group = top.add(Group('reset_group', radix='binary', color='red'))
-        group.add(Disp('reset_inst/pcie_rstn'))
-        group.add(Disp('reset_inst/ethernet_reset', radix='hexadecimal'))
+        group = top.add(Group("reset_group", radix="binary", color="red"))
+        group.add(Disp("reset_inst/pcie_rstn"))
+        group.add(Disp("reset_inst/ethernet_reset", radix="hexadecimal"))
 
-        hier = top.add(Hierarchy('reg_inst'))
+        hier = top.add(Hierarchy("reg_inst"))
         for i in range(0, 5):
-            grp = hier.add(Group(f'reg {i}', color='yellow'))
+            grp = hier.add(Group(f"reg {i}", color="yellow"))
             blk = grp.add(Block())
-            blk.add(Disp(f'register[{i}]', color=''))
+            blk.add(Disp(f"register[{i}]", color=""))
 
         # Propagate hierarchy and properties
         testbench.forward()
 
         # Generate the tcl waveforms file
         gtkwave = GTKWaveTarget(testbench)
-        ftcl = open('test_target_gtkwave.tcl', 'w')
+        ftcl = open("test_target_gtkwave.tcl", "w")
         ftcl.write(gtkwave.genstr)
         ftcl.close()
 
@@ -175,5 +173,5 @@ class TestGTKWaveTarget(unittest.TestCase):
         self.assertEqual(gtkwave.genstr, GTKWAVE_GENERATOR_REF)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of wavedisp. See the root README.md for further
 # information.
@@ -23,31 +22,34 @@
 import logging
 import re
 
-from .x11colors import X11_COLORS
 from ..visitor import Visitor
+from .x11colors import X11_COLORS
 
-
-LOGGER = logging.getLogger('wavegen')
+LOGGER = logging.getLogger("wavegen")
 
 
 class GTKWaveTarget(Visitor):
     """Code generator for the GTKWave viewer."""
 
-    RadixDict = {'binary': 'Binary',
-                 'hexadecimal': 'Hex',
-                 'signed': 'Signed Decimal',
-                 'unsigned': 'Decimal',
-                 'octal': 'Octal',
-                 'string': 'ASCII',
-                 'symbolic': 'Enum'}
+    RadixDict = {
+        "binary": "Binary",
+        "hexadecimal": "Hex",
+        "signed": "Signed Decimal",
+        "unsigned": "Decimal",
+        "octal": "Octal",
+        "string": "ASCII",
+        "symbolic": "Enum",
+    }
 
-    SupportedColors = {'Red': (0xff, 0x00, 0x00),
-                       'Orange': (0xff, 0xa5, 0x00),
-                       'Yellow': (0xff, 0xff, 0x00),
-                       'Green': (0x00, 0xff, 0x00),
-                       'Blue': (0x00, 0x00, 0xff),
-                       'Indigo': (0x4b, 0x00, 0x82),
-                       'Violet': (0xee, 0x82, 0xee)}
+    SupportedColors = {
+        "Red": (0xFF, 0x00, 0x00),
+        "Orange": (0xFF, 0xA5, 0x00),
+        "Yellow": (0xFF, 0xFF, 0x00),
+        "Green": (0x00, 0xFF, 0x00),
+        "Blue": (0x00, 0x00, 0xFF),
+        "Indigo": (0x4B, 0x00, 0x82),
+        "Violet": (0xEE, 0x82, 0xEE),
+    }
 
     @staticmethod
     def nearest_color(color):
@@ -68,16 +70,16 @@ class GTKWaveTarget(Visitor):
         lookup_color = X11_COLORS[color]
 
         # Get keys in a list to compure argmin correctly
-        keys = [k for k in GTKWaveTarget.SupportedColors.keys()]
+        keys = list(GTKWaveTarget.SupportedColors.keys())
 
         # Compute all distances, each distance index corresponds to
         # the index in the keys variable.
         distance_list = []
         for key in keys:
             value = GTKWaveTarget.SupportedColors[key]
-            distance = (value[0] - lookup_color[0])**2
-            distance += (value[1] - lookup_color[1])**2
-            distance += (value[2] - lookup_color[2])**2
+            distance = (value[0] - lookup_color[0]) ** 2
+            distance += (value[1] - lookup_color[1]) ** 2
+            distance += (value[2] - lookup_color[2]) ** 2
             distance_list.append(distance)
 
         # argmin (get index of the min)
@@ -92,14 +94,14 @@ class GTKWaveTarget(Visitor):
         self.stack = []
 
         # Header
-        self.genstr = '# Wavedisp generated gtkwave file\n'
-        self.genstr += 'gtkwave::/Edit/Set_Trace_Max_Hier 0\n\n'  # Get full signal length.
+        self.genstr = "# Wavedisp generated gtkwave file\n"
+        self.genstr += "gtkwave::/Edit/Set_Trace_Max_Hier 0\n\n"  # Get full signal length.
 
         # Recurse
         self.visit(tree)
 
         # Footer
-        self.genstr += '\ngtkwave::/Edit/Set_Trace_Max_Hier 1\n'  # Restore signal length.
+        self.genstr += "\ngtkwave::/Edit/Set_Trace_Max_Hier 1\n"  # Restore signal length.
 
     def process_group(self, tree):
         """Method to process an ast.Group node.
@@ -109,19 +111,19 @@ class GTKWaveTarget(Visitor):
 
         # Push a new list in the stack
         self.stack.append([])
-        self.genstr += '\n'
+        self.genstr += "\n"
 
         # Recurse
         super().process_group(tree)
 
         # Create the group by analyzing the stack
         if self.stack[-1]:
-            self.genstr += 'gtkwave::/Edit/UnHighlight_All\n'
+            self.genstr += "gtkwave::/Edit/UnHighlight_All\n"
             for name in self.stack[-1]:
                 name_esc = re.escape(name)
-                self.genstr += f'gtkwave::/Edit/Highlight_Regexp {{^{name_esc}}}\n'
-            self.genstr += f'gtkwave::/Edit/Create_Group {{{tree.value[0]}}}\n'
-            self.genstr += f'gtkwave::/Edit/UnHighlight_All\n'
+                self.genstr += f"gtkwave::/Edit/Highlight_Regexp {{^{name_esc}}}\n"
+            self.genstr += f"gtkwave::/Edit/Create_Group {{{tree.value[0]}}}\n"
+            self.genstr += "gtkwave::/Edit/UnHighlight_All\n"
 
         # The current list in the stack is processed, we can remove it.
         self.stack.pop()
@@ -136,7 +138,7 @@ class GTKWaveTarget(Visitor):
         :param tree: AST tree instance.
         """
 
-        self.genstr += f'gtkwave::/Edit/Insert_Comment {{{tree.value[0]}}}\n'
+        self.genstr += f"gtkwave::/Edit/Insert_Comment {{{tree.value[0]}}}\n"
 
         super().process_divider(tree)
 
@@ -147,38 +149,37 @@ class GTKWaveTarget(Visitor):
         """
 
         for value in tree.value:
-            hierarchy = tree.hierarchy.split('/')
-            fullname = '.'.join(hierarchy[1:]) + '.' + value
+            hierarchy = tree.hierarchy.split("/")
+            fullname = ".".join(hierarchy[1:]) + "." + value
             fullname_esc = re.escape(fullname)
 
             if self.stack:
                 self.stack[-1].append(fullname)
 
-            self.genstr += f'gtkwave::addSignalsFromList [list {{{fullname}}}]\n'
+            self.genstr += f"gtkwave::addSignalsFromList [list {{{fullname}}}]\n"
 
-            if 'radix' in tree.properties:
-                radix = tree.properties['radix']
-                if radix != '':
+            if "radix" in tree.properties:
+                radix = tree.properties["radix"]
+                if radix != "":
                     try:
                         radix_conv = self.RadixDict[radix]
-                        self.genstr += f'gtkwave::/Edit/Highlight_Regexp {{^{fullname_esc}}}\n'
-                        self.genstr += f'gtkwave::/Edit/Data_Format/{radix_conv}\n'
-                        self.genstr += f'gtkwave::/Edit/UnHighlight_All\n'
+                        self.genstr += f"gtkwave::/Edit/Highlight_Regexp {{^{fullname_esc}}}\n"
+                        self.genstr += f"gtkwave::/Edit/Data_Format/{radix_conv}\n"
+                        self.genstr += "gtkwave::/Edit/UnHighlight_All\n"
                     except KeyError:
-                        LOGGER.error('%s:%i: unkown radix type "%s"',
-                                     tree.filename, tree.line, radix)
+                        LOGGER.error('%s:%i: unkown radix type "%s"', tree.filename, tree.line, radix)
 
-            if 'color' in tree.properties:
-                color = tree.properties['color']
-                if color != '':
+            if "color" in tree.properties:
+                color = tree.properties["color"]
+                if color != "":
                     try:
                         # Search the nearest color available in SupportedColors
                         found_color = self.nearest_color(color)
 
                         # Write the result
-                        self.genstr += f'gtkwave::/Edit/Highlight_Regexp {{^{fullname_esc}}}\n'
-                        self.genstr += f'gtkwave::/Edit/Color_Format/{found_color}\n'
-                        self.genstr += f'gtkwave::/Edit/UnHighlight_All\n'
+                        self.genstr += f"gtkwave::/Edit/Highlight_Regexp {{^{fullname_esc}}}\n"
+                        self.genstr += f"gtkwave::/Edit/Color_Format/{found_color}\n"
+                        self.genstr += "gtkwave::/Edit/UnHighlight_All\n"
                     except KeyError:
                         LOGGER.error('%s:%i: unkown color "%s"', tree.filename, tree.line, color)
 

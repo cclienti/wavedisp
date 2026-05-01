@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of wavedisp. See the root README.md for further
 # information.
@@ -22,7 +21,7 @@
 
 import unittest
 
-from wavedisp.ast import Hierarchy, Divider, Disp, Group, Block, ASTBase
+from wavedisp.ast import ASTBase, Block, Disp, Divider, Group, Hierarchy
 from wavedisp.visitor import Visitor
 
 
@@ -30,7 +29,7 @@ class VisitorImpl(Visitor):
     """Test Implementation of Visitor base class."""
 
     def __init__(self, tree):
-        self.result = ''
+        self.result = ""
         self.visit(tree)
 
     def process_hierarchy(self, tree):
@@ -39,7 +38,7 @@ class VisitorImpl(Visitor):
         :param tree: AST tree instance.
         """
 
-        self.result += 'H'
+        self.result += "H"
         super().process_hierarchy(tree)
 
     def process_group(self, tree):
@@ -48,7 +47,7 @@ class VisitorImpl(Visitor):
         :param tree: AST tree instance.
         """
 
-        self.result += 'G'
+        self.result += "G"
         super().process_group(tree)
 
     def process_block(self, tree):
@@ -57,7 +56,7 @@ class VisitorImpl(Visitor):
         :param tree: AST tree instance.
         """
 
-        self.result += 'B'
+        self.result += "B"
         super().process_block(tree)
 
     def process_divider(self, tree):
@@ -66,7 +65,7 @@ class VisitorImpl(Visitor):
         :param tree: AST tree instance.
         """
 
-        self.result += 'D'
+        self.result += "D"
         super().process_divider(tree)
 
     def process_disp(self, tree):
@@ -75,7 +74,7 @@ class VisitorImpl(Visitor):
         :param tree: AST tree instance.
         """
 
-        self.result += 'd'
+        self.result += "d"
         super().process_disp(tree)
 
 
@@ -87,27 +86,27 @@ class TestVisitor(unittest.TestCase):
 
         ASTBase.reset_unique_id()
 
-        testbench = Hierarchy('/tb')
-        testbench.add(Divider('Clocks', color='blue'))
+        testbench = Hierarchy("/tb")
+        testbench.add(Divider("Clocks", color="blue"))
 
-        top = testbench.add(Hierarchy('top'))
-        top.add(Disp(['clock_main', 'external_pll_valid']))
-        top.add(Divider('The divider'))
+        top = testbench.add(Hierarchy("top"))
+        top.add(Disp(["clock_main", "external_pll_valid"]))
+        top.add(Divider("The divider"))
 
-        group = top.add(Group('reset_group', radix='binary'))
-        group.add(Disp('reset_inst/pcie_rstn'))
-        group.add(Disp('reset_inst/ethernet_reset'))
+        group = top.add(Group("reset_group", radix="binary"))
+        group.add(Disp("reset_inst/pcie_rstn"))
+        group.add(Disp("reset_inst/ethernet_reset"))
 
-        hier = top.add(Hierarchy('reg_inst'))
+        hier = top.add(Hierarchy("reg_inst"))
         for i in range(0, 5):
-            grp = hier.add(Group(f'reg {i}'))
+            grp = hier.add(Group(f"reg {i}"))
             blk = grp.add(Block())
-            blk.add(Disp(f'register[{i}]'))
+            blk.add(Disp(f"register[{i}]"))
 
         visitor = VisitorImpl(testbench)
 
-        self.assertEqual(visitor.result, 'HDHdDGddHGBdGBdGBdGBdGBd')
+        self.assertEqual(visitor.result, "HDHdDGddHGBdGBdGBdGBdGBd")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

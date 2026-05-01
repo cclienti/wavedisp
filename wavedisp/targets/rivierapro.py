@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of wavedisp. See the root README.md for further
 # information.
@@ -22,23 +21,24 @@
 
 import logging
 
-from .x11colors import X11_COLORS
 from ..visitor import Visitor
+from .x11colors import X11_COLORS
 
-
-LOGGER = logging.getLogger('wavegen')
+LOGGER = logging.getLogger("wavegen")
 
 
 class RivieraProTarget(Visitor):
     """Code generator for the RivieraPro viewer."""
 
-    RadixDict = {'binary': '-binary',
-                 'hexadecimal': '-hex',
-                 'signed': '-decimal',
-                 'unsigned': '-unsigned',
-                 'octal': '-octal',
-                 'string': '-ascii',
-                 'symbolic': ''}
+    RadixDict = {
+        "binary": "-binary",
+        "hexadecimal": "-hex",
+        "signed": "-decimal",
+        "unsigned": "-unsigned",
+        "octal": "-octal",
+        "string": "-ascii",
+        "symbolic": "",
+    }
 
     def __init__(self, tree):
         # Stack of list of signal to group. When the stack is empty
@@ -46,7 +46,7 @@ class RivieraProTarget(Visitor):
         self.stack = []
 
         # Header
-        self.genstr = '# Wavedisp generated Aldec/RivieraPro file\n\n'
+        self.genstr = "# Wavedisp generated Aldec/RivieraPro file\n\n"
 
         # Recurse
         self.visit(tree)
@@ -59,7 +59,7 @@ class RivieraProTarget(Visitor):
 
         # Push a new list in the stack
         self.stack.append([])
-        self.genstr += '\n'
+        self.genstr += "\n"
 
         # Recurse
         super().process_group(tree)
@@ -67,10 +67,10 @@ class RivieraProTarget(Visitor):
         # Create the group by analyzing the stack
         state = self.stack.pop()
         if state:
-            group_str = f'add wave -vgroup {{{tree.value[0]}}} '
+            group_str = f"add wave -vgroup {{{tree.value[0]}}} "
             self.genstr += group_str
 
-            group_str_pad = ' ' * len(group_str)
+            group_str_pad = " " * len(group_str)
             for index in range(len(state)):
                 sig = state[index]
 
@@ -80,9 +80,9 @@ class RivieraProTarget(Visitor):
                 if index == len(state) - 1:
                     self.genstr += sig
                 else:
-                    self.genstr += sig + ' \\'
+                    self.genstr += sig + " \\"
 
-                self.genstr += '\n'
+                self.genstr += "\n"
 
     def process_divider(self, tree):
         """Method to process an ast.Divider node.
@@ -91,18 +91,18 @@ class RivieraProTarget(Visitor):
         """
 
         self.genstr += 'add wave -named_row ""\n'
-        self.genstr += f'add wave '
+        self.genstr += "add wave "
 
-        if 'color' in tree.properties:
-            color = tree.properties['color']
-            if color != '':
+        if "color" in tree.properties:
+            color = tree.properties["color"]
+            if color != "":
                 try:
-                    self.genstr += '-color #{:02x}{:02x}{:02x} '.format(*X11_COLORS[color])
-                    self.genstr += '-color_waveform '
+                    self.genstr += "-color #{:02x}{:02x}{:02x} ".format(*X11_COLORS[color])
+                    self.genstr += "-color_waveform "
                 except KeyError:
                     LOGGER.error('%s:%i: unkown color "%s"', tree.filename, tree.line, color)
 
-        self.genstr += f'-named_row {{{tree.value[0]}}}\n'
+        self.genstr += f"-named_row {{{tree.value[0]}}}\n"
 
         super().process_divider(tree)
 
@@ -113,36 +113,35 @@ class RivieraProTarget(Visitor):
         """
 
         for value in tree.value:
-            disp_line = ''
+            disp_line = ""
 
-            if 'radix' in tree.properties:
-                radix = tree.properties['radix']
-                if radix != '':
+            if "radix" in tree.properties:
+                radix = tree.properties["radix"]
+                if radix != "":
                     try:
-                        disp_line += '-radix {} '.format(self.RadixDict[radix])
+                        disp_line += f"-radix {self.RadixDict[radix]} "
                     except KeyError:
-                        LOGGER.error('%s:%i: unkown radix type "%s"',
-                                     tree.filename, tree.line, radix)
+                        LOGGER.error('%s:%i: unkown radix type "%s"', tree.filename, tree.line, radix)
 
-            if 'color' in tree.properties:
-                color = tree.properties['color']
-                if color != '':
+            if "color" in tree.properties:
+                color = tree.properties["color"]
+                if color != "":
                     try:
-                        disp_line += '-color #{:02x}{:02x}{:02x} '.format(*X11_COLORS[color])
-                        disp_line += '-color_waveform '
+                        disp_line += "-color #{:02x}{:02x}{:02x} ".format(*X11_COLORS[color])
+                        disp_line += "-color_waveform "
                     except KeyError:
                         LOGGER.error('%s:%i: unkown color "%s"', tree.filename, tree.line, color)
 
-            if 'height' in tree.properties:
-                height = tree.properties['height']
-                if height != '':
-                    disp_line += f'-height {height} '
+            if "height" in tree.properties:
+                height = tree.properties["height"]
+                if height != "":
+                    disp_line += f"-height {height} "
 
-            disp_line += f'{{{tree.hierarchy}/{value}}}'
+            disp_line += f"{{{tree.hierarchy}/{value}}}"
 
             if self.stack:
                 self.stack[-1].append(disp_line)
             else:
-                self.genstr += 'add wave ' + disp_line + '\n'
+                self.genstr += "add wave " + disp_line + "\n"
 
         super().process_disp(tree)

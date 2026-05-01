@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of wavedisp. See the root README.md for further
 # information.
@@ -20,15 +19,14 @@
 
 """Abstract Syntax Tree Classes."""
 
-import logging
-import inspect
 import importlib
 import importlib.util  # importlib does not import util
-import re
+import inspect
+import logging
 import os
+import re
 
-
-LOGGER = logging.getLogger('wavegen')
+LOGGER = logging.getLogger("wavegen")
 
 
 class ASTBase:
@@ -41,7 +39,7 @@ class ASTBase:
 
     """
 
-    __PropertyKeys = ['color', 'height', 'radix']
+    __PropertyKeys = ["color", "height", "radix"]
 
     __UniqueID = 0
 
@@ -50,7 +48,7 @@ class ASTBase:
         """Return a unique identifier to identify an instance."""
         uid = ASTBase.__UniqueID
         ASTBase.__UniqueID += 1
-        return f'n{uid}'
+        return f"n{uid}"
 
     @staticmethod
     def reset_unique_id():
@@ -66,8 +64,8 @@ class ASTBase:
     def __init__(self, **kwargs):
         # Initialize payloads
         self.value = []
-        self.hierarchy = ''
-        self.properties = {k: '' for k in self.__PropertyKeys}
+        self.hierarchy = ""
+        self.properties = dict.fromkeys(self.__PropertyKeys, "")
         self.children = []
         self.uid = ASTBase.get_unique_id()
 
@@ -75,23 +73,23 @@ class ASTBase:
         # caller_level, filename and line can be overloaded in kwargs
         # by prefixing key with __.
         caller_level = 1
-        if '__caller_level' in kwargs:
-            caller_level = kwargs['__caller_level']
+        if "__caller_level" in kwargs:
+            caller_level = kwargs["__caller_level"]
 
         stack = inspect.stack()
         caller = stack[caller_level]
 
         self.filename = caller[1]
-        if '__filename' in kwargs:
-            self.filename = kwargs['__filename']
+        if "__filename" in kwargs:
+            self.filename = kwargs["__filename"]
 
         self.line = caller[2]
-        if '__line' in kwargs:
-            self.line = kwargs['__line']
+        if "__line" in kwargs:
+            self.line = kwargs["__line"]
 
         # Fill properties using kwargs
         for key, value in kwargs.items():
-            if key.startswith('__'):
+            if key.startswith("__"):
                 continue
             self.set_property(key, value)
 
@@ -102,11 +100,11 @@ class ASTBase:
         :return: the graphviz complete graph.
         """
 
-        graph = 'digraph G {\n'
-        graph += '    rankdir=LR;\n'
-        graph += '    node [shape=plaintext];\n'
+        graph = "digraph G {\n"
+        graph += "    rankdir=LR;\n"
+        graph += "    node [shape=plaintext];\n"
         graph += self.render_node()
-        graph += '}\n'
+        graph += "}\n"
 
         return graph
 
@@ -118,35 +116,31 @@ class ASTBase:
 
         """
 
-        match = re.search(r'.*\.([A-Za-z0-9]+)\'>$', str(self.__class__))
+        match = re.search(r".*\.([A-Za-z0-9]+)\'>$", str(self.__class__))
         if match:
             classname = match.group(1)
 
         def tab(size) -> str:
-            return ' ' * 4 * size
+            return " " * 4 * size
 
-        node_title = ('<TR><TD BGCOLOR="gray10"><FONT COLOR="white">'
-                      '<b>{classname}</b>'
-                      '</FONT></TD></TR>')
+        node_title = '<TR><TD BGCOLOR="gray10"><FONT COLOR="white"><b>{classname}</b></FONT></TD></TR>'
 
-        node_item = ('<TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT">'
-                     '<b>{key}</b>: {value}'
-                     '</TD></TR>')
+        node_item = '<TR><TD BGCOLOR="cornsilk2" ALIGN="LEFT"><b>{key}</b>: {value}</TD></TR>'
 
         nodes = tab(1) + f'{self.uid} [label=< <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="4">\n'
-        nodes += tab(2) + node_title.format(classname=classname) + '\n'
-        nodes += tab(2) + node_item.format(key='value', value=self.value) + '\n'
-        nodes += tab(2) + node_item.format(key='hierarchy', value=self.hierarchy) + '\n'
-        nodes += tab(2) + node_item.format(key='properties', value=self.properties) + '\n'
-        nodes += tab(2) + node_item.format(key='filename', value=self.filename) + '\n'
-        nodes += tab(2) + node_item.format(key='line', value=self.line)
-        nodes += f'</TABLE> >];\n'
+        nodes += tab(2) + node_title.format(classname=classname) + "\n"
+        nodes += tab(2) + node_item.format(key="value", value=self.value) + "\n"
+        nodes += tab(2) + node_item.format(key="hierarchy", value=self.hierarchy) + "\n"
+        nodes += tab(2) + node_item.format(key="properties", value=self.properties) + "\n"
+        nodes += tab(2) + node_item.format(key="filename", value=self.filename) + "\n"
+        nodes += tab(2) + node_item.format(key="line", value=self.line)
+        nodes += "</TABLE> >];\n"
 
         if self.children is not None:
             for child in self.children:
                 # Call rendering of child before making the connection.
                 nodes += child.render_node()
-                nodes += tab(1) + f'{self.uid} -> {child.uid};\n'
+                nodes += tab(1) + f"{self.uid} -> {child.uid};\n"
 
         return nodes
 
@@ -160,8 +154,7 @@ class ASTBase:
         if key in self.__PropertyKeys:
             self.properties[key] = value
         else:
-            LOGGER.error('%s:%i: unknown property "%s"',
-                         self.filename, self.line, key)
+            LOGGER.error('%s:%i: unknown property "%s"', self.filename, self.line, key)
 
     def get_property(self, key) -> str:
         """Get a property.
@@ -173,8 +166,7 @@ class ASTBase:
         try:
             return self.properties[key]
         except KeyError:
-            LOGGER.error('%s:%i: unknown property "%s"',
-                         self.filename, self.line, key)
+            LOGGER.error('%s:%i: unknown property "%s"', self.filename, self.line, key)
 
     def forward(self):
         """The forward method propagate information recursively across the
@@ -193,7 +185,7 @@ class ASTBase:
             child.hierarchy = self.hierarchy + child.hierarchy
             for key, value in self.properties.items():
                 prop = child.get_property(key)
-                if prop == '':
+                if prop == "":
                     child.set_property(key, value)
             child.forward()
 
@@ -209,8 +201,8 @@ class ASTLeaf(ASTBase):
     """
 
     def __init__(self, **kwargs):
-        if '__caller_level' not in kwargs.keys():
-            kwargs['__caller_level'] = 2
+        if "__caller_level" not in kwargs.keys():
+            kwargs["__caller_level"] = 2
         super().__init__(**kwargs)
         self.children = None
 
@@ -226,8 +218,8 @@ class ASTNode(ASTBase):
     """
 
     def __init__(self, **kwargs):
-        if '__caller_level' not in kwargs.keys():
-            kwargs['__caller_level'] = 2
+        if "__caller_level" not in kwargs.keys():
+            kwargs["__caller_level"] = 2
         super().__init__(**kwargs)
 
     def include(self, filename, **kwargs):
@@ -251,11 +243,11 @@ class ASTNode(ASTBase):
 
         """
 
-        if '__generator' not in kwargs:
-            generator = 'generator'
+        if "__generator" not in kwargs:
+            generator = "generator"
         else:
-            generator = kwargs['__generator']
-            kwargs.pop('__generator')
+            generator = kwargs["__generator"]
+            kwargs.pop("__generator")
 
         stack = inspect.stack()
         caller = stack[1]
@@ -268,28 +260,31 @@ class ASTNode(ASTBase):
 
         try:
             LOGGER.info('%s:%i: including "%s", generator "%s"', inc_file, inc_line, filename, generator)
-            module_list = os.path.basename(filename).split('.')
-            module_name = '_'.join(module_list[:-1])
+            module_list = os.path.basename(filename).split(".")
+            module_name = "_".join(module_list[:-1])
             spec = importlib.util.spec_from_file_location(module_name, filename)
             dest = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(dest)
 
             tree = getattr(dest, generator)(**kwargs)
             if tree is None:
-                LOGGER.error('%s:%i: failed to include "%s": the generator returned nothing',
-                             inc_file, inc_line, filename)
+                LOGGER.error(
+                    '%s:%i: failed to include "%s": the generator returned nothing', inc_file, inc_line, filename
+                )
                 return None
 
             self.children.append(tree)
             return tree
 
-        except EnvironmentError:
-            LOGGER.error('%s:%i: failed to include "%s": bad filename or permissions error',
-                         inc_file, inc_line, filename)
+        except OSError:
+            LOGGER.error(
+                '%s:%i: failed to include "%s": bad filename or permissions error', inc_file, inc_line, filename
+            )
 
         except AttributeError:
-            LOGGER.error('%s:%i: failed to include "%s", generator "%s" not found',
-                         inc_file, inc_line, filename, generator)
+            LOGGER.error(
+                '%s:%i: failed to include "%s", generator "%s" not found', inc_file, inc_line, filename, generator
+            )
 
         return None
 
@@ -324,10 +319,10 @@ class Hierarchy(ASTNode):
         super().__init__(__caller_level=3, **kwargs)
         self.hierarchy = hierarchy_path
 
-        if not self.hierarchy.startswith('/'):
-            self.hierarchy = '/' + self.hierarchy
+        if not self.hierarchy.startswith("/"):
+            self.hierarchy = "/" + self.hierarchy
 
-        if hierarchy_path.endswith('/'):
+        if hierarchy_path.endswith("/"):
             self.hierarchy = self.hierarchy[:-1]
 
 

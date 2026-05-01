@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of wavedisp. See the root README.md for further
 # information.
@@ -22,9 +21,8 @@
 
 import unittest
 
-from wavedisp.ast import Hierarchy, Divider, Disp, Group, Block, ASTBase
+from wavedisp.ast import ASTBase, Block, Disp, Divider, Group, Hierarchy
 from wavedisp.targets.modelsim import ModelsimTarget
-
 
 MODELSIM_GENERATOR_REF = """# Wavedisp generated Mentor/Modelsim file
 
@@ -57,29 +55,29 @@ class TestModelsimTarget(unittest.TestCase):
         ASTBase.reset_unique_id()
 
         # Create the waveforms AST
-        testbench = Hierarchy('/tb')
-        testbench.add(Divider('Clocks', color='blue'))
+        testbench = Hierarchy("/tb")
+        testbench.add(Divider("Clocks", color="blue"))
 
-        top = testbench.add(Hierarchy('top'))
-        top.add(Disp(['clock_main', 'external_pll_valid']))
-        top.add(Divider('The divider'))
+        top = testbench.add(Hierarchy("top"))
+        top.add(Disp(["clock_main", "external_pll_valid"]))
+        top.add(Divider("The divider"))
 
-        group = top.add(Group('reset_group', radix='binary'))
-        group.add(Disp('reset_inst/pcie_rstn'))
-        group.add(Disp('reset_inst/ethernet_reset', radix='hexadecimal'))
+        group = top.add(Group("reset_group", radix="binary"))
+        group.add(Disp("reset_inst/pcie_rstn"))
+        group.add(Disp("reset_inst/ethernet_reset", radix="hexadecimal"))
 
-        hier = top.add(Hierarchy('reg_inst'))
+        hier = top.add(Hierarchy("reg_inst"))
         for i in range(0, 5):
-            grp = hier.add(Group(f'reg {i}'))
+            grp = hier.add(Group(f"reg {i}"))
             blk = grp.add(Block())
-            blk.add(Disp(f'register[{i}]'))
+            blk.add(Disp(f"register[{i}]"))
 
         # Propagate hierarchy and properties
         testbench.forward()
 
         # Generate the tcl waveforms file
         modelsim = ModelsimTarget(testbench)
-        ftcl = open('test_target_modelsim.tcl', 'w')
+        ftcl = open("test_target_modelsim.tcl", "w")
         ftcl.write(modelsim.genstr)
         ftcl.close()
 
@@ -87,5 +85,5 @@ class TestModelsimTarget(unittest.TestCase):
         self.assertEqual(modelsim.genstr, MODELSIM_GENERATOR_REF)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
