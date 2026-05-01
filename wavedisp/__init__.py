@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # This file is part of wavedisp. See the root README.md for further
 # information.
@@ -20,4 +19,11 @@
 
 """Wavedisp package initialization."""
 
-__version__ = "1.0.6"
+try:
+    from importlib.metadata import version, PackageNotFoundError
+    try:
+        __version__ = version("wavedisp")
+    except PackageNotFoundError:
+        __version__ = "unknown"
+except ImportError:
+    __version__ = "unknown"
