@@ -283,18 +283,36 @@ class SurferTarget(Visitor):
         # emitted inside it.
         self.pending = []
 
-        self.genstr = "# Wavedisp generated Surfer command file\n"
+        # Emitted commands, joined on demand. A list rather than a
+        # string so that the _focus peephole is a look at the last entry
+        # instead of a scan of everything written so far, which turned
+        # generation quadratic in the number of rows.
+        self._chunks = ["# Wavedisp generated Surfer command file\n"]
+
+        # Whether any group was created, for the footer. Recovering it by
+        # searching the output for "group_marked" would also find the
+        # word inside a name.
+        self._grouped = False
 
         self.visit(tree)
 
         # Every group was folded as it was closed, which is how the
         # target returns to the enclosing level. Undo that, and leave
         # nothing focused so the view does not open on the last row.
-        if "group_marked" in self.genstr:
-            self.genstr += "\ngroup_unfold_all\n"
-            self.genstr += "item_unfocus\n"
+        if self._grouped:
+            self._emit("\ngroup_unfold_all\n")
+            self._emit("item_unfocus\n")
         else:
-            self.genstr += "\nitem_unfocus\n"
+            self._emit("\nitem_unfocus\n")
+
+    @property
+    def genstr(self):
+        """The generated command file."""
+        return "".join(self._chunks)
+
+    def _emit(self, text):
+        """Append ``text`` to the output."""
+        self._chunks.append(text)
 
     def _focus(self, index):
         """Focus the row at ``index``, which every later command acts on.
@@ -312,11 +330,12 @@ class SurferTarget(Visitor):
         # Closing a group focuses its header right after the last row
         # inside it was focused. Nothing ran in between, so the earlier
         # focus had no effect and only makes the file harder to read.
-        previous = self.genstr.rsplit("\n", 2)[-2] if self.genstr.count("\n") > 1 else ""
-        if previous.startswith("item_focus "):
-            self.genstr = self.genstr[: -len(previous) - 1] + command
+        # _focus is the only thing that emits this command, and always
+        # as a chunk of its own, so the last chunk is the whole test.
+        if self._chunks[-1].startswith("item_focus "):
+            self._chunks[-1] = command
         else:
-            self.genstr += command
+            self._emit(command)
 
     def _create_pending_groups(self, index):
         """Create the groups waiting for a first row, around the row at ``index``.
@@ -337,7 +356,8 @@ class SurferTarget(Visitor):
                 continue
 
             self._focus(index)
-            self.genstr += self._add_command("group_marked", entry.word)
+            self._emit(self._add_command("group_marked", entry.word))
+            self._grouped = True
             entry.header = index
             self.nvisible += 1
             index += 1
@@ -369,7 +389,7 @@ class SurferTarget(Visitor):
         empty ``name`` yields an empty ``word`` and the two are equal.
         """
         if word != name:
-            self.genstr += f"item_rename {name}\n"
+            self._emit(f"item_rename {name}\n")
 
     def _add_row(self, command):
         """Emit a command that appends one row, and focus that row.
@@ -381,7 +401,7 @@ class SurferTarget(Visitor):
         land.
         """
         index = self.nvisible
-        self.genstr += command
+        self._emit(command)
         self.nvisible += 1
 
         index = self._create_pending_groups(index)
@@ -402,7 +422,7 @@ class SurferTarget(Visitor):
             radix = tree.properties["radix"]
             if radix != "":
                 try:
-                    self.genstr += f"item_set_format {self.RadixDict[radix]}\n"
+                    self._emit(f"item_set_format {self.RadixDict[radix]}\n")
                 except KeyError:
                     LOGGER.error('%s:%i: unkown radix type "%s"', tree.filename, tree.line, radix)
 
@@ -410,7 +430,7 @@ class SurferTarget(Visitor):
             color = tree.properties["color"]
             if color != "":
                 try:
-                    self.genstr += f"item_set_color {self.nearest_color(color)}\n"
+                    self._emit(f"item_set_color {self.nearest_color(color)}\n")
                 except KeyError:
                     LOGGER.error('%s:%i: unkown color "%s"', tree.filename, tree.line, color)
 
@@ -419,7 +439,7 @@ class SurferTarget(Visitor):
             if height != "":
                 scale = height_scale(height, self.line_height, f"{tree.filename}:{tree.line}")
                 if scale is not None:
-                    self.genstr += f"item_set_height {scale}\n"
+                    self._emit(f"item_set_height {scale}\n")
 
     def process_group(self, tree):
         """Method to process an ast.Group node.
@@ -437,7 +457,13 @@ class SurferTarget(Visitor):
         # so this entry is the last one -- and remove() would compare by
         # value, which two same-named groups satisfy, unregistering the
         # wrong one.
-        assert self.pending.pop() is entry
+        #
+        # Not an assert, because the pop is the point and `python -O`
+        # deletes the whole statement: the entry would stay pending and
+        # latch onto some later row, wrapping it in a group the wave file
+        # never asked for.
+        if self.pending.pop() is not entry:
+            raise RuntimeError("groups were left in a different order than they were entered")
 
         if entry.header is None:
             LOGGER.warning(
@@ -450,7 +476,7 @@ class SurferTarget(Visitor):
         # so a folded group takes the next sibling after itself, at the
         # enclosing level. group_unfold_all in the footer undoes it.
         self._focus(entry.header)
-        self.genstr += "group_fold_recursive\n"
+        self._emit("group_fold_recursive\n")
         self.nvisible = entry.header + 1
 
         # Folding drops the focus. GroupFoldRecursive clears focused_item
