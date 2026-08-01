@@ -20,12 +20,34 @@
 """Generator for the GTKWave viewer."""
 
 import logging
-import re
 
 from ..visitor import Visitor
 from .x11colors import X11_COLORS
 
 LOGGER = logging.getLogger("wavegen")
+
+
+def highlight_added(var):
+    """Highlight every trace added since ``var`` was captured.
+
+    gtkwave has no command to highlight a trace by literal name, only by
+    regex, and a regex cannot name a trace reliably: it matches against
+    the *displayed* name, where a one-bit signal appears as ``name[0]``,
+    a bus as ``name[hi:lo]`` and an array element as ``name[0][7:0]``.
+    Anchoring to tell those apart is guesswork, and ``re.escape`` emits
+    Python escapes that glibc reads as POSIX *basic* operators, so any
+    name carrying ``(``, ``|`` or ``+`` matches nothing at all.
+
+    Positions have none of those problems. The generated script records
+    the trace count before adding, then highlights every row that
+    appeared -- whatever it is called, and including the comment rows a
+    name match can never reach.
+    """
+    return (
+        f"for {{set wd_i ${var}}} {{$wd_i < [gtkwave::getTotalNumTraces]}} {{incr wd_i}} {{\n"
+        f"    gtkwave::setTraceHighlightFromIndex $wd_i 1\n"
+        f"}}\n"
+    )
 
 
 class GTKWaveTarget(Visitor):
@@ -89,9 +111,8 @@ class GTKWaveTarget(Visitor):
         return keys[index]
 
     def __init__(self, tree):
-        # Stack of list of signal to group. When the stack is empty
-        # Disp and Divider must not push information.
-        self.stack = []
+        # Group nesting depth, used to name one TCL variable per level.
+        self.depth = 0
 
         # Header
         self.genstr = "# Wavedisp generated gtkwave file\n"
@@ -101,7 +122,10 @@ class GTKWaveTarget(Visitor):
         self.visit(tree)
 
         # Footer
-        self.genstr += "\ngtkwave::/Edit/Set_Trace_Max_Hier 1\n"  # Restore signal length.
+        # Leave nothing highlighted: the viewer would otherwise open with
+        # the whole last group selected.
+        self.genstr += "\ngtkwave::/Edit/UnHighlight_All\n"
+        self.genstr += "gtkwave::/Edit/Set_Trace_Max_Hier 1\n"  # Restore signal length.
 
     def process_group(self, tree):
         """Method to process an ast.Group node.
@@ -109,28 +133,23 @@ class GTKWaveTarget(Visitor):
         :param tree: AST tree instance.
         """
 
-        # Push a new list in the stack
-        self.stack.append([])
-        self.genstr += "\n"
+        # One variable per nesting depth: an inner group is created
+        # during the outer one's span, and the outer span is measured
+        # after it, so the rows the inner group added are included.
+        var = f"wd_start_{self.depth}"
+        self.depth += 1
+        self.genstr += f"\nset {var} [gtkwave::getTotalNumTraces]\n"
 
         # Recurse
         super().process_group(tree)
 
-        # Create the group by analyzing the stack
-        if self.stack[-1]:
-            self.genstr += "gtkwave::/Edit/UnHighlight_All\n"
-            for name in self.stack[-1]:
-                name_esc = re.escape(name)
-                self.genstr += f"gtkwave::/Edit/Highlight_Regexp {{^{name_esc}}}\n"
-            self.genstr += f"gtkwave::/Edit/Create_Group {{{tree.value[0]}}}\n"
-            self.genstr += "gtkwave::/Edit/UnHighlight_All\n"
-
-        # The current list in the stack is processed, we can remove it.
-        self.stack.pop()
-
-        # Append the group name in the stack if not empty.
-        if self.stack:
-            self.stack[-1].append(tree.value[0])
+        self.depth -= 1
+        self.genstr += f"if {{[gtkwave::getTotalNumTraces] > ${var}}} {{\n"
+        self.genstr += "gtkwave::/Edit/UnHighlight_All\n"
+        self.genstr += highlight_added(var)
+        self.genstr += f"gtkwave::/Edit/Create_Group {{{tree.value[0]}}}\n"
+        self.genstr += "gtkwave::/Edit/UnHighlight_All\n"
+        self.genstr += "}\n"
 
     def process_divider(self, tree):
         """Method to process an ast.Divider node.
@@ -151,11 +170,14 @@ class GTKWaveTarget(Visitor):
         for value in tree.value:
             hierarchy = tree.hierarchy.split("/")
             fullname = ".".join(hierarchy[1:]) + "." + value
-            fullname_esc = re.escape(fullname)
 
-            if self.stack:
-                self.stack[-1].append(fullname)
-
+            # Properties apply to whatever this add produced -- nothing at
+            # all if the signal is absent from the dump, which is why the
+            # count is compared rather than assumed to grow by one. Only
+            # worth recording when there is a property to apply.
+            tagged = bool(tree.properties.get("radix") or tree.properties.get("color"))
+            if tagged:
+                self.genstr += "set wd_sig [gtkwave::getTotalNumTraces]\n"
             self.genstr += f"gtkwave::addSignalsFromList [list {{{fullname}}}]\n"
 
             if "radix" in tree.properties:
@@ -163,7 +185,8 @@ class GTKWaveTarget(Visitor):
                 if radix != "":
                     try:
                         radix_conv = self.RadixDict[radix]
-                        self.genstr += f"gtkwave::/Edit/Highlight_Regexp {{^{fullname_esc}}}\n"
+                        self.genstr += "gtkwave::/Edit/UnHighlight_All\n"
+                        self.genstr += highlight_added("wd_sig")
                         self.genstr += f"gtkwave::/Edit/Data_Format/{radix_conv}\n"
                         self.genstr += "gtkwave::/Edit/UnHighlight_All\n"
                     except KeyError:
@@ -177,7 +200,8 @@ class GTKWaveTarget(Visitor):
                         found_color = self.nearest_color(color)
 
                         # Write the result
-                        self.genstr += f"gtkwave::/Edit/Highlight_Regexp {{^{fullname_esc}}}\n"
+                        self.genstr += "gtkwave::/Edit/UnHighlight_All\n"
+                        self.genstr += highlight_added("wd_sig")
                         self.genstr += f"gtkwave::/Edit/Color_Format/{found_color}\n"
                         self.genstr += "gtkwave::/Edit/UnHighlight_All\n"
                     except KeyError:

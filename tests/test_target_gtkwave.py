@@ -32,71 +32,135 @@ gtkwave::addSignalsFromList [list {tb.top.clock_main}]
 gtkwave::addSignalsFromList [list {tb.top.external_pll_valid}]
 gtkwave::/Edit/Insert_Comment {The divider}
 
+set wd_start_0 [gtkwave::getTotalNumTraces]
+set wd_sig [gtkwave::getTotalNumTraces]
 gtkwave::addSignalsFromList [list {tb.top.reset_inst/pcie_rstn}]
-gtkwave::/Edit/Highlight_Regexp {^tb\\.top\\.reset_inst/pcie_rstn}
+gtkwave::/Edit/UnHighlight_All
+for {set wd_i $wd_sig} {$wd_i < [gtkwave::getTotalNumTraces]} {incr wd_i} {
+    gtkwave::setTraceHighlightFromIndex $wd_i 1
+}
 gtkwave::/Edit/Data_Format/Binary
 gtkwave::/Edit/UnHighlight_All
-gtkwave::/Edit/Highlight_Regexp {^tb\\.top\\.reset_inst/pcie_rstn}
+gtkwave::/Edit/UnHighlight_All
+for {set wd_i $wd_sig} {$wd_i < [gtkwave::getTotalNumTraces]} {incr wd_i} {
+    gtkwave::setTraceHighlightFromIndex $wd_i 1
+}
 gtkwave::/Edit/Color_Format/Red
 gtkwave::/Edit/UnHighlight_All
+set wd_sig [gtkwave::getTotalNumTraces]
 gtkwave::addSignalsFromList [list {tb.top.reset_inst/ethernet_reset}]
-gtkwave::/Edit/Highlight_Regexp {^tb\\.top\\.reset_inst/ethernet_reset}
+gtkwave::/Edit/UnHighlight_All
+for {set wd_i $wd_sig} {$wd_i < [gtkwave::getTotalNumTraces]} {incr wd_i} {
+    gtkwave::setTraceHighlightFromIndex $wd_i 1
+}
 gtkwave::/Edit/Data_Format/Hex
 gtkwave::/Edit/UnHighlight_All
-gtkwave::/Edit/Highlight_Regexp {^tb\\.top\\.reset_inst/ethernet_reset}
+gtkwave::/Edit/UnHighlight_All
+for {set wd_i $wd_sig} {$wd_i < [gtkwave::getTotalNumTraces]} {incr wd_i} {
+    gtkwave::setTraceHighlightFromIndex $wd_i 1
+}
 gtkwave::/Edit/Color_Format/Red
 gtkwave::/Edit/UnHighlight_All
+if {[gtkwave::getTotalNumTraces] > $wd_start_0} {
 gtkwave::/Edit/UnHighlight_All
-gtkwave::/Edit/Highlight_Regexp {^tb\\.top\\.reset_inst/pcie_rstn}
-gtkwave::/Edit/Highlight_Regexp {^tb\\.top\\.reset_inst/ethernet_reset}
+for {set wd_i $wd_start_0} {$wd_i < [gtkwave::getTotalNumTraces]} {incr wd_i} {
+    gtkwave::setTraceHighlightFromIndex $wd_i 1
+}
 gtkwave::/Edit/Create_Group {reset_group}
 gtkwave::/Edit/UnHighlight_All
+}
 
+set wd_start_0 [gtkwave::getTotalNumTraces]
+set wd_sig [gtkwave::getTotalNumTraces]
 gtkwave::addSignalsFromList [list {tb.top.reg_inst.register[0]}]
-gtkwave::/Edit/Highlight_Regexp {^tb\\.top\\.reg_inst\\.register\\[0\\]}
+gtkwave::/Edit/UnHighlight_All
+for {set wd_i $wd_sig} {$wd_i < [gtkwave::getTotalNumTraces]} {incr wd_i} {
+    gtkwave::setTraceHighlightFromIndex $wd_i 1
+}
 gtkwave::/Edit/Color_Format/Yellow
 gtkwave::/Edit/UnHighlight_All
+if {[gtkwave::getTotalNumTraces] > $wd_start_0} {
 gtkwave::/Edit/UnHighlight_All
-gtkwave::/Edit/Highlight_Regexp {^tb\\.top\\.reg_inst\\.register\\[0\\]}
+for {set wd_i $wd_start_0} {$wd_i < [gtkwave::getTotalNumTraces]} {incr wd_i} {
+    gtkwave::setTraceHighlightFromIndex $wd_i 1
+}
 gtkwave::/Edit/Create_Group {reg 0}
 gtkwave::/Edit/UnHighlight_All
+}
 
+set wd_start_0 [gtkwave::getTotalNumTraces]
+set wd_sig [gtkwave::getTotalNumTraces]
 gtkwave::addSignalsFromList [list {tb.top.reg_inst.register[1]}]
-gtkwave::/Edit/Highlight_Regexp {^tb\\.top\\.reg_inst\\.register\\[1\\]}
+gtkwave::/Edit/UnHighlight_All
+for {set wd_i $wd_sig} {$wd_i < [gtkwave::getTotalNumTraces]} {incr wd_i} {
+    gtkwave::setTraceHighlightFromIndex $wd_i 1
+}
 gtkwave::/Edit/Color_Format/Yellow
 gtkwave::/Edit/UnHighlight_All
+if {[gtkwave::getTotalNumTraces] > $wd_start_0} {
 gtkwave::/Edit/UnHighlight_All
-gtkwave::/Edit/Highlight_Regexp {^tb\\.top\\.reg_inst\\.register\\[1\\]}
+for {set wd_i $wd_start_0} {$wd_i < [gtkwave::getTotalNumTraces]} {incr wd_i} {
+    gtkwave::setTraceHighlightFromIndex $wd_i 1
+}
 gtkwave::/Edit/Create_Group {reg 1}
 gtkwave::/Edit/UnHighlight_All
+}
 
+set wd_start_0 [gtkwave::getTotalNumTraces]
+set wd_sig [gtkwave::getTotalNumTraces]
 gtkwave::addSignalsFromList [list {tb.top.reg_inst.register[2]}]
-gtkwave::/Edit/Highlight_Regexp {^tb\\.top\\.reg_inst\\.register\\[2\\]}
+gtkwave::/Edit/UnHighlight_All
+for {set wd_i $wd_sig} {$wd_i < [gtkwave::getTotalNumTraces]} {incr wd_i} {
+    gtkwave::setTraceHighlightFromIndex $wd_i 1
+}
 gtkwave::/Edit/Color_Format/Yellow
 gtkwave::/Edit/UnHighlight_All
+if {[gtkwave::getTotalNumTraces] > $wd_start_0} {
 gtkwave::/Edit/UnHighlight_All
-gtkwave::/Edit/Highlight_Regexp {^tb\\.top\\.reg_inst\\.register\\[2\\]}
+for {set wd_i $wd_start_0} {$wd_i < [gtkwave::getTotalNumTraces]} {incr wd_i} {
+    gtkwave::setTraceHighlightFromIndex $wd_i 1
+}
 gtkwave::/Edit/Create_Group {reg 2}
 gtkwave::/Edit/UnHighlight_All
+}
 
+set wd_start_0 [gtkwave::getTotalNumTraces]
+set wd_sig [gtkwave::getTotalNumTraces]
 gtkwave::addSignalsFromList [list {tb.top.reg_inst.register[3]}]
-gtkwave::/Edit/Highlight_Regexp {^tb\\.top\\.reg_inst\\.register\\[3\\]}
+gtkwave::/Edit/UnHighlight_All
+for {set wd_i $wd_sig} {$wd_i < [gtkwave::getTotalNumTraces]} {incr wd_i} {
+    gtkwave::setTraceHighlightFromIndex $wd_i 1
+}
 gtkwave::/Edit/Color_Format/Yellow
 gtkwave::/Edit/UnHighlight_All
+if {[gtkwave::getTotalNumTraces] > $wd_start_0} {
 gtkwave::/Edit/UnHighlight_All
-gtkwave::/Edit/Highlight_Regexp {^tb\\.top\\.reg_inst\\.register\\[3\\]}
+for {set wd_i $wd_start_0} {$wd_i < [gtkwave::getTotalNumTraces]} {incr wd_i} {
+    gtkwave::setTraceHighlightFromIndex $wd_i 1
+}
 gtkwave::/Edit/Create_Group {reg 3}
 gtkwave::/Edit/UnHighlight_All
+}
 
+set wd_start_0 [gtkwave::getTotalNumTraces]
+set wd_sig [gtkwave::getTotalNumTraces]
 gtkwave::addSignalsFromList [list {tb.top.reg_inst.register[4]}]
-gtkwave::/Edit/Highlight_Regexp {^tb\\.top\\.reg_inst\\.register\\[4\\]}
+gtkwave::/Edit/UnHighlight_All
+for {set wd_i $wd_sig} {$wd_i < [gtkwave::getTotalNumTraces]} {incr wd_i} {
+    gtkwave::setTraceHighlightFromIndex $wd_i 1
+}
 gtkwave::/Edit/Color_Format/Yellow
 gtkwave::/Edit/UnHighlight_All
+if {[gtkwave::getTotalNumTraces] > $wd_start_0} {
 gtkwave::/Edit/UnHighlight_All
-gtkwave::/Edit/Highlight_Regexp {^tb\\.top\\.reg_inst\\.register\\[4\\]}
+for {set wd_i $wd_start_0} {$wd_i < [gtkwave::getTotalNumTraces]} {incr wd_i} {
+    gtkwave::setTraceHighlightFromIndex $wd_i 1
+}
 gtkwave::/Edit/Create_Group {reg 4}
 gtkwave::/Edit/UnHighlight_All
+}
 
+gtkwave::/Edit/UnHighlight_All
 gtkwave::/Edit/Set_Trace_Max_Hier 1
 """
 
