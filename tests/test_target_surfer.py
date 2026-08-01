@@ -19,6 +19,8 @@
 
 """Test the Surfer target."""
 
+import subprocess
+import sys
 import unittest
 
 from wavedisp.ast import ASTBase, Block, Disp, Divider, Group, Hierarchy
@@ -340,6 +342,42 @@ class TestSameNamedNestedGroups(unittest.TestCase):
         with self.assertLogs("wavegen", level="WARNING"):
             out = SurferTarget(blk).genstr
         self.assertEqual(out.count("group_marked mem"), 1)
+
+
+class TestOptimisedInterpreter(unittest.TestCase):
+    """The generator must behave identically under `python -O`.
+
+    Assertions are deleted by -O, statement and all, so an assert whose
+    expression does the work silently stops doing it. Here that would
+    leave a finished group on the pending stack, and the next row emitted
+    would be wrapped in a group the wave file never asked for.
+    """
+
+    SCRIPT = (
+        "from wavedisp.ast import ASTBase, Block, Disp, Group, Hierarchy\n"
+        "from wavedisp.targets.surfer import SurferTarget\n"
+        "ASTBase.reset_unique_id()\n"
+        "blk = Block()\n"
+        "hier = blk.add(Hierarchy('/tb'))\n"
+        "hier.add(Group('ghost'))\n"
+        "hier.add(Disp('sig'))\n"
+        "blk.forward()\n"
+        "print(SurferTarget(blk).genstr)\n"
+    )
+
+    def generate(self, *flags):
+        result = subprocess.run(
+            [sys.executable, *flags, "-c", self.SCRIPT],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return result.stdout
+
+    def test_an_empty_group_does_not_capture_a_later_row(self):
+        plain = self.generate()
+        self.assertNotIn("group_marked", plain)
+        self.assertEqual(self.generate("-O"), plain)
 
 
 if __name__ == "__main__":
