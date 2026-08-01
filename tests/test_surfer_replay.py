@@ -170,14 +170,27 @@ class SurferModel:
 
     def group_fold_recursive(self):
         index = self.to_item_index(self.focused)
+        if index is None:
+            self.errors.append("group_fold_recursive with nothing focused")
+            return
         item = self.items[index]
         if item.kind != "group":
             self.errors.append(f"group_fold_recursive on a {item.kind}")
             return
+
+        # Surfer drops the focus when the folded group contains the
+        # focused row -- subtree_contains(root, candidate) is
+        # (root..subtree_end(candidate)).contains(candidate), so it holds
+        # for the group itself too, and folding a group you focused in
+        # order to fold it always unfocuses.
+        end = index + 1
+        while end < len(self.items) and self.items[end].level > item.level:
+            end += 1
+        if index <= self.to_item_index(self.focused) < end:
+            self.focused = None
+
         item.unfolded = False
-        for candidate in self.items[index + 1 :]:
-            if candidate.level <= item.level:
-                break
+        for candidate in self.items[index + 1 : end]:
             candidate.unfolded = False
 
     def group_unfold_all(self):
@@ -271,6 +284,38 @@ class TestReplay(unittest.TestCase):
         )
 
     def test_nested_groups(self):
+        blk = Block()
+        hier = blk.add(Hierarchy("/tb"))
+        outer = hier.add(Group("outer"))
+        outer.add(Disp("first"))
+        inner = outer.add(Group("inner"))
+        inner.add(Disp(["x", "y"]))
+        outer.add(Disp("last"))
+        hier.add(Disp("after"))
+        model = replay(blk)
+        self.assertEqual(model.errors, [])
+        self.assertEqual(
+            model.render(),
+            [
+                (0, "group", "outer"),
+                (1, "variable", "tb.first"),
+                (1, "group", "inner"),
+                (2, "variable", "tb.x"),
+                (2, "variable", "tb.y"),
+                (1, "variable", "tb.last"),
+                (0, "variable", "tb.after"),
+            ],
+        )
+
+    def test_a_row_after_a_nested_group_stays_in_the_enclosing_group(self):
+        """The case the first dpmemrf run happened not to cover.
+
+        Folding is what returns to the enclosing level, and folding also
+        drops Surfer's focus, so without focusing the folded group again
+        the row lands at the end of the tree at level 0. At top level
+        that is the right place by coincidence; one level in, it escapes
+        the group.
+        """
         blk = Block()
         hier = blk.add(Hierarchy("/tb"))
         outer = hier.add(Group("outer"))

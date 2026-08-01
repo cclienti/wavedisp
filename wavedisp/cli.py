@@ -53,6 +53,13 @@ def check_target_kwargs(name, accepted, kwargs, logger):
 
     """
 
+    if not isinstance(kwargs, dict):
+        logger.error(
+            "target arguments must be a json object, got %s",
+            type(kwargs).__name__ if kwargs is not None else "null",
+        )
+        return False
+
     unknown = sorted(set(kwargs) - set(accepted))
     if not unknown:
         return True
@@ -66,8 +73,13 @@ def check_target_kwargs(name, accepted, kwargs, logger):
     return False
 
 
-def make_target(name, tree, logger, **kwargs):
+def make_target(name, tree, logger, kwargs):
     """Instantiate the target ``name`` over ``tree``.
+
+    ``kwargs`` is taken as a dictionary rather than as ``**kwargs``, so
+    that a --target-kwargs key happening to be called "name", "tree" or
+    "logger" is reported like any other unknown option instead of
+    colliding with this function's own parameters.
 
     :return: the target instance, or None if it could not be built.
 
@@ -83,7 +95,13 @@ def make_target(name, tree, logger, **kwargs):
     if not check_target_kwargs(name, set(parameters) - {"self", "tree"}, kwargs, logger):
         return None
 
-    return target_class(tree, **kwargs)
+    try:
+        return target_class(tree, **kwargs)
+    except ValueError as error:
+        # A target validates its own options; it cannot report them,
+        # since it has no logger and is used outside the CLI too.
+        logger.error('target "%s": %s', name, error)
+        return None
 
 
 class LoggingLevelCounterHandler(logging.Handler):
@@ -166,7 +184,7 @@ def main():
         fmod.close()
         exit(0)
 
-    target = make_target(args.target, block, logger, **target_kwargs)
+    target = make_target(args.target, block, logger, target_kwargs)
     if target is None:
         exit(1)
 
