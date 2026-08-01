@@ -27,6 +27,7 @@ from wavedisp.ast import Block
 from wavedisp.targets.gtkwave import GTKWaveTarget
 from wavedisp.targets.modelsim import ModelsimTarget
 from wavedisp.targets.rivierapro import RivieraProTarget
+from wavedisp.targets.surfer import SurferTarget
 
 
 class LoggingLevelCounterHandler(logging.Handler):
@@ -59,7 +60,7 @@ def main():
         default="gtkwave",
         help=(
             "targeted simulator for the generated waveforms file, "
-            "available targets: gtkwave, modelsim, rivierapro and dot (graphviz)"
+            "available targets: gtkwave, modelsim, rivierapro, surfer and dot (graphviz)"
         ),
     )
     parser.add_argument(
@@ -99,6 +100,8 @@ def main():
         target = ModelsimTarget(block)
     elif args.target == "rivierapro":
         target = RivieraProTarget(block)
+    elif args.target == "surfer":
+        target = SurferTarget(block)
     elif args.target == "dot":
         fmod = open(args.output, "w")
         fmod.write(str(block.children[0]))
