@@ -27,6 +27,37 @@ from .x11colors import X11_COLORS
 LOGGER = logging.getLogger("wavegen")
 
 
+def tcl_word(text):
+    """Quote ``text`` so gtkwave receives it as one TCL word.
+
+    Names reach the script straight from the user's ``.wave.py``: group
+    titles, divider text, signal paths. Interpolating them raw into
+    ``{...}`` works until one of them carries a brace, and then the
+    braced word ends early -- which now truncates the enclosing ``if``
+    block and silently drops the group creation with it, not just the one
+    command.
+
+    Braces are kept when they are safe, since that is the ordinary case
+    and the generated script is meant to be readable. A string is safe
+    when its braces are balanced and it holds no backslash, a backslash
+    being able to escape the closing brace. Anything else is emitted as a
+    backslash-escaped bare word.
+    """
+    depth = 0
+    for char in text:
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth < 0:
+                break
+    else:
+        if depth == 0 and "\\" not in text:
+            return "{" + text + "}"
+
+    return "".join("\\" + c if c in ' \t\n\\$[]{}";' else c for c in text)
+
+
 def highlight_added(var):
     """Highlight every trace added since ``var`` was captured.
 
@@ -147,7 +178,7 @@ class GTKWaveTarget(Visitor):
         self.genstr += f"if {{[gtkwave::getTotalNumTraces] > ${var}}} {{\n"
         self.genstr += "gtkwave::/Edit/UnHighlight_All\n"
         self.genstr += highlight_added(var)
-        self.genstr += f"gtkwave::/Edit/Create_Group {{{tree.value[0]}}}\n"
+        self.genstr += f"gtkwave::/Edit/Create_Group {tcl_word(tree.value[0])}\n"
         self.genstr += "gtkwave::/Edit/UnHighlight_All\n"
         self.genstr += "}\n"
 
@@ -157,7 +188,7 @@ class GTKWaveTarget(Visitor):
         :param tree: AST tree instance.
         """
 
-        self.genstr += f"gtkwave::/Edit/Insert_Comment {{{tree.value[0]}}}\n"
+        self.genstr += f"gtkwave::/Edit/Insert_Comment {tcl_word(tree.value[0])}\n"
 
         super().process_divider(tree)
 
@@ -178,7 +209,7 @@ class GTKWaveTarget(Visitor):
             tagged = bool(tree.properties.get("radix") or tree.properties.get("color"))
             if tagged:
                 self.genstr += "set wd_sig [gtkwave::getTotalNumTraces]\n"
-            self.genstr += f"gtkwave::addSignalsFromList [list {{{fullname}}}]\n"
+            self.genstr += f"gtkwave::addSignalsFromList [list {tcl_word(fullname)}]\n"
 
             if "radix" in tree.properties:
                 radix = tree.properties["radix"]
