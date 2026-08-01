@@ -50,30 +50,30 @@ class TestMakeTarget(unittest.TestCase):
     def test_every_target_builds_with_no_argument(self):
         for name in TARGETS:
             with self.subTest(target=name):
-                self.assertIsNotNone(make_target(name, tree(), self.logger))
+                self.assertIsNotNone(make_target(name, tree(), self.logger, {}))
 
     def test_an_argument_reaches_the_target(self):
-        target = make_target("surfer", tree(), self.logger, line_height=8.0)
+        target = make_target("surfer", tree(), self.logger, {"line_height": 8.0})
         self.assertIsInstance(target, SurferTarget)
         self.assertIn("item_set_height 4\n", target.genstr)
 
     def test_the_default_is_the_targets_own(self):
-        self.assertIn("item_set_height 2\n", make_target("surfer", tree(), self.logger).genstr)
+        self.assertIn("item_set_height 2\n", make_target("surfer", tree(), self.logger, {}).genstr)
 
     def test_an_argument_the_target_does_not_take_is_refused(self):
         """Rather than a TypeError traceback, or a silent no-effect."""
         with self.assertLogs("test:cli", level="ERROR") as logs:
-            self.assertIsNone(make_target("gtkwave", tree(), self.logger, line_height=8.0))
+            self.assertIsNone(make_target("gtkwave", tree(), self.logger, {"line_height": 8.0}))
         self.assertIn("line_height", logs.output[0])
 
     def test_the_message_says_what_the_target_does_take(self):
         with self.assertLogs("test:cli", level="ERROR") as logs:
-            make_target("surfer", tree(), self.logger, nope=1)
+            make_target("surfer", tree(), self.logger, {"nope": 1})
         self.assertIn("line_height", logs.output[0])
 
     def test_a_target_with_no_option_says_so(self):
         with self.assertLogs("test:cli", level="ERROR") as logs:
-            make_target("modelsim", tree(), self.logger, nope=1)
+            make_target("modelsim", tree(), self.logger, {"nope": 1})
         self.assertIn("no option", logs.output[0])
 
     def test_every_target_name_refuses_an_option_it_cannot_use(self):
@@ -87,14 +87,44 @@ class TestMakeTarget(unittest.TestCase):
             with self.subTest(target=name), self.assertLogs("test:cli", level="ERROR") as logs:
                 accepted = set() if name == "dot" else None
                 if accepted is None:
-                    self.assertIsNone(make_target(name, tree(), self.logger, nosuchoption=1))
+                    self.assertIsNone(make_target(name, tree(), self.logger, {"nosuchoption": 1}))
                 else:
                     self.assertFalse(check_target_kwargs(name, accepted, {"nosuchoption": 1}, self.logger))
             self.assertIn("nosuchoption", logs.output[0])
 
     def test_an_unknown_target_is_refused(self):
         with self.assertLogs("test:cli", level="ERROR"):
-            self.assertIsNone(make_target("nosuchviewer", tree(), self.logger))
+            self.assertIsNone(make_target("nosuchviewer", tree(), self.logger, {}))
+
+
+class TestMalformedTargetKwargs(unittest.TestCase):
+    """--target-kwargs is user JSON: every shape must be reported, not raised."""
+
+    def setUp(self):
+        self.logger = logging.getLogger("test:cli")
+
+    def test_a_json_value_that_is_not_an_object(self):
+        for payload in (None, 3, "text", [1, 2]):
+            with self.subTest(payload=payload), self.assertLogs("test:cli", level="ERROR") as logs:
+                self.assertIsNone(make_target("surfer", tree(), self.logger, payload))
+            self.assertIn("json object", logs.output[0])
+
+    def test_the_dot_path_refuses_it_too(self):
+        with self.assertLogs("test:cli", level="ERROR"):
+            self.assertFalse(check_target_kwargs("dot", set(), None, self.logger))
+
+    def test_a_key_named_like_a_parameter_of_make_target(self):
+        """name/tree/logger must be reported, not bound to the signature."""
+        for key in ("name", "tree", "logger", "kwargs"):
+            with self.subTest(key=key), self.assertLogs("test:cli", level="ERROR") as logs:
+                self.assertIsNone(make_target("surfer", tree(), self.logger, {key: 1}))
+            self.assertIn(key, logs.output[0])
+
+    def test_a_value_the_target_rejects_is_reported(self):
+        """The target raises ValueError; the CLI turns it into a message."""
+        with self.assertLogs("test:cli", level="ERROR") as logs:
+            self.assertIsNone(make_target("surfer", tree(), self.logger, {"line_height": 0}))
+        self.assertIn("positive", logs.output[0])
 
 
 if __name__ == "__main__":

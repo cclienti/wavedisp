@@ -22,7 +22,15 @@
 import unittest
 
 from wavedisp.ast import ASTBase, Block, Disp, Divider, Group, Hierarchy
-from wavedisp.targets.surfer import SURFER_LINE_HEIGHT, SurferTarget, alpha_idx, bare_word, height_scale
+from wavedisp.targets.surfer import (
+    SURFER_LINE_HEIGHT,
+    SurferTarget,
+    alpha_idx,
+    bare_word,
+    command_text,
+    height_scale,
+    representable_path,
+)
 
 SURFER_GENERATOR_REF = """# Wavedisp generated Surfer command file
 
@@ -47,24 +55,28 @@ item_focus g
 item_set_format Hexadecimal
 item_focus e
 group_fold_recursive
+item_focus e
 variable_add tb.top.reg_inst.register[0]
 item_focus f
 group_marked reg_0
 item_rename reg 0
 item_focus f
 group_fold_recursive
+item_focus f
 variable_add tb.top.reg_inst.register[1]
 item_focus g
 group_marked reg_1
 item_rename reg 1
 item_focus g
 group_fold_recursive
+item_focus g
 variable_add tb.top.reg_inst.register[2]
 item_focus h
 group_marked reg_2
 item_rename reg 2
 item_focus h
 group_fold_recursive
+item_focus h
 
 group_unfold_all
 item_unfocus
@@ -140,20 +152,17 @@ class TestBareWord(unittest.TestCase):
     """divider_add and group_marked take a single \\w+ word, or nothing."""
 
     def test_word_is_kept(self):
-        self.assertEqual(bare_word("reset_group", "group"), "reset_group")
+        self.assertEqual(bare_word("reset_group"), "reset_group")
 
     def test_spaces_and_punctuation_collapse(self):
-        self.assertEqual(bare_word("reg 0", "group"), "reg_0")
-        self.assertEqual(bare_word("lut_gen[0].inst", "group"), "lut_gen_0_inst")
-        self.assertEqual(bare_word("A/B", "group"), "A_B")
+        self.assertEqual(bare_word("reg 0"), "reg_0")
+        self.assertEqual(bare_word("lut_gen[0].inst"), "lut_gen_0_inst")
+        self.assertEqual(bare_word("A/B"), "A_B")
 
-    def test_empty_falls_back(self):
-        self.assertEqual(bare_word("...", "group"), "group")
-        self.assertEqual(bare_word("", "divider"), "divider")
-
-
-if __name__ == "__main__":
-    unittest.main()
+    def test_a_nameless_item_yields_an_empty_word(self):
+        """The argument is optional; omitting it is how it is said."""
+        self.assertEqual(bare_word("..."), "")
+        self.assertEqual(bare_word(""), "")
 
 
 class TestHeightScale(unittest.TestCase):
@@ -215,3 +224,123 @@ class TestHeightPlacement(unittest.TestCase):
         blk.add(Hierarchy("/tb")).add(Divider("d", height=32))
         blk.forward()
         self.assertNotIn("item_set_height", SurferTarget(blk).genstr)
+
+
+class TestUnrepresentableCharacters(unittest.TestCase):
+    """A command file is split on lines, then ";", then truncated at "#".
+
+    None of the three can be escaped, so a name carrying one of those
+    characters has no faithful spelling at all. Names are substituted --
+    a recognisable wrong name beats a truncated one -- but a *path* is
+    dropped, because a renamed path names a signal that is not in the
+    dump and Surfer would add no row where the target counted one.
+    """
+
+    def test_a_name_is_substituted_and_reported(self):
+        for text in ("a#b", "a;b", "a\nb", "a\rb"):
+            with self.subTest(text=text), self.assertLogs("wavegen", level="ERROR"):
+                self.assertEqual(command_text(text, "ctx"), "a_b")
+
+    def test_a_clean_name_is_untouched_and_silent(self):
+        self.assertEqual(command_text("port A -- inputs", "ctx"), "port A -- inputs")
+
+    def test_a_path_carrying_one_is_refused(self):
+        for path in ("tb.a#b", "tb.a;b", "tb.a\nb"):
+            with self.subTest(path=path), self.assertLogs("wavegen", level="ERROR"):
+                self.assertFalse(representable_path(path, "ctx"))
+
+    def test_a_clean_path_is_accepted(self):
+        self.assertTrue(representable_path("tb.dut.sig[3:0]", "ctx"))
+
+    def test_the_dropped_signal_does_not_shift_the_rows_after_it(self):
+        """The whole point: the count must match what Surfer will build."""
+        ASTBase.reset_unique_id()
+        blk = Block()
+        hier = blk.add(Hierarchy("/tb"))
+        hier.add(Disp(["good", "ba#d", "after"]))
+        blk.forward()
+        with self.assertLogs("wavegen", level="ERROR"):
+            out = SurferTarget(blk).genstr
+        self.assertNotIn("ba_d", out)
+        self.assertIn("variable_add tb.good\nitem_focus a\n", out)
+        self.assertIn("variable_add tb.after\nitem_focus b\n", out)
+
+
+class TestNamelessItems(unittest.TestCase):
+    """An item whose name has no word character at all."""
+
+    def setUp(self):
+        ASTBase.reset_unique_id()
+
+    def test_a_nameless_divider_is_added_without_an_argument(self):
+        """item_rename with an empty argument is a parse error."""
+        blk = Block()
+        blk.add(Hierarchy("/tb")).add(Divider("---"))
+        blk.forward()
+        out = SurferTarget(blk).genstr
+        self.assertIn("divider_add\n", out)
+        self.assertNotIn("item_rename\n", out)
+        self.assertNotIn("item_rename \n", out)
+
+    def test_a_named_divider_still_gets_its_name_back(self):
+        blk = Block()
+        blk.add(Hierarchy("/tb")).add(Divider("the divider"))
+        blk.forward()
+        self.assertIn("item_rename the divider\n", SurferTarget(blk).genstr)
+
+
+class TestRadixMapping(unittest.TestCase):
+    def test_string_maps_to_ascii(self):
+        """Surfer's String translator answers ERROR for a vector."""
+        self.assertEqual(SurferTarget.RadixDict["string"], "ASCII")
+
+    def test_every_wavedisp_radix_is_mapped(self):
+        self.assertEqual(
+            set(SurferTarget.RadixDict),
+            {"binary", "hexadecimal", "signed", "unsigned", "octal", "string", "symbolic"},
+        )
+
+
+class TestLineHeightValidation(unittest.TestCase):
+    """line_height arrives from user JSON, so it is checked not divided by."""
+
+    def setUp(self):
+        ASTBase.reset_unique_id()
+        self.blk = Block()
+        self.blk.add(Hierarchy("/tb")).add(Disp("sig", height=32))
+        self.blk.forward()
+
+    def test_zero_is_refused(self):
+        with self.assertRaises(ValueError):
+            SurferTarget(self.blk, line_height=0)
+
+    def test_a_negative_value_is_refused(self):
+        with self.assertRaises(ValueError):
+            SurferTarget(self.blk, line_height=-16)
+
+    def test_a_non_number_is_refused(self):
+        with self.assertRaises(ValueError):
+            SurferTarget(self.blk, line_height="tall")
+
+    def test_a_quoted_number_is_accepted(self):
+        """A natural JSON typo, and harmless once converted."""
+        self.assertIn("item_set_height 2\n", SurferTarget(self.blk, line_height="16").genstr)
+
+
+class TestSameNamedNestedGroups(unittest.TestCase):
+    def test_a_group_nested_in_a_same_named_group(self):
+        """The pending entries hold equal values; only identity tells them apart."""
+        ASTBase.reset_unique_id()
+        blk = Block()
+        hier = blk.add(Hierarchy("/tb"))
+        outer = hier.add(Group("mem"))
+        outer.add(Group("mem"))
+        outer.add(Disp("a"))
+        blk.forward()
+        with self.assertLogs("wavegen", level="WARNING"):
+            out = SurferTarget(blk).genstr
+        self.assertEqual(out.count("group_marked mem"), 1)
+
+
+if __name__ == "__main__":
+    unittest.main()

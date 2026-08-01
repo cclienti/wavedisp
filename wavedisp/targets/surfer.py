@@ -54,27 +54,59 @@ def alpha_idx(index):
     return "".join(chr(ord("a") + int(digit, 16)) for digit in f"{index:x}")
 
 
+#: The characters a command file cannot carry anywhere, at all. It is
+#: split into lines, then on ``;``, then truncated at ``#``, before any
+#: command is parsed, and the splitter has no quoting or escaping -- so
+#: there is no spelling of a name or a path containing one of these that
+#: survives.
+UNREPRESENTABLE = "#;\n\r"
+
+
 def command_text(text, context):
     """Return ``text`` as a Surfer command file can carry it.
 
-    A command file is split on newlines and on ``;``, and everything
-    after a ``#`` is dropped, before any command is parsed. Those two
-    characters are removed by the splitter itself, and the splitter has
-    no quoting or escaping whatsoever -- there is no spelling of a name
-    containing them that survives. They are replaced here so the rest of
-    the file still parses, and reported, since the result is not what the
-    user asked for.
+    Used for names, where something wrong is better than something
+    truncated: left alone, ``clock#0`` reaches Surfer as ``clock`` and
+    ``clock;0`` as ``clock`` plus a line Surfer rejects as an unknown
+    command. Substituting keeps the name recognisable and reports that it
+    was changed.
+
+    Paths get the opposite treatment -- see representable_path.
     """
-    if "#" in text or ";" in text:
+    if any(char in text for char in UNREPRESENTABLE):
         LOGGER.error(
-            '%s: "#" and ";" cannot be represented in a Surfer command file, replaced by "_" in "%s"', context, text
+            '%s: a Surfer command file cannot carry "#", ";" or a newline, replaced by "_" in "%s"',
+            context,
+            text,
         )
-        text = text.replace("#", "_").replace(";", "_")
+        for char in UNREPRESENTABLE:
+            text = text.replace(char, "_")
 
     return text
 
 
-def bare_word(text, fallback):
+def representable_path(path, context):
+    """Whether ``path`` can be named in a command file at all.
+
+    A substitution is right for a name and wrong for a signal path: the
+    renamed row is still the row the user meant, but a *renamed path*
+    names a signal that does not exist, so Surfer adds no row while the
+    target counts one -- and from there every predicted index is off by
+    one, which moves the properties and groups of everything after it.
+    Dropping the one signal keeps the rest of the file correct.
+    """
+    if any(char in path for char in UNREPRESENTABLE):
+        LOGGER.error(
+            '%s: a Surfer command file cannot carry "#", ";" or a newline, dropping signal "%s"',
+            context,
+            path,
+        )
+        return False
+
+    return True
+
+
+def bare_word(text):
     """Return ``text`` reduced to what ``divider_add`` and ``group_marked`` accept.
 
     Those two take an *optional* argument, which Surfer parses as a
@@ -85,11 +117,29 @@ def bare_word(text, fallback):
 
     The caller pairs this with an ``item_rename``, which takes the rest
     of the line and restores the real name -- the reduced word is never
-    what ends up on screen.
+    what ends up on screen. An empty result is returned as such: the
+    argument is optional, and omitting it is how an unnamed item is
+    asked for.
     """
-    word = re.sub(r"\W+", "_", text, flags=re.ASCII).strip("_")
+    return re.sub(r"\W+", "_", text, flags=re.ASCII).strip("_")
 
-    return word if word else fallback
+
+class PendingGroup:
+    """A group entered but not yet created.
+
+    A group cannot be created empty -- ``group_marked`` with nothing
+    focused does nothing at all -- so it waits here until the first row
+    inside it is emitted, and latches onto that row.
+
+    A class rather than a dict so that identity is what distinguishes
+    two of them: two groups of the same name hold equal values, and a
+    list operation comparing by value would confuse them.
+    """
+
+    def __init__(self, name):
+        self.name = name
+        self.word = bare_word(name)
+        self.header = None
 
 
 #: Surfer's ``layout.waveforms_line_height`` default, in pixels. It is
@@ -146,7 +196,12 @@ class SurferTarget(Visitor):
         "signed": "Signed",
         "unsigned": "Unsigned",
         "octal": "Octal",
-        "string": "String",
+        # ASCII, not String: Surfer's StringTranslator is for variables
+        # that carry a string, and answers "ERROR (0x...)" for the
+        # BigUint a VCD or FST vector loads as. ASCIITranslator is the
+        # one that renders bits as characters, like Modelsim's "ascii"
+        # and GTKWave's "ASCII".
+        "string": "ASCII",
         "symbolic": "Enum",
     }
 
@@ -207,7 +262,17 @@ class SurferTarget(Visitor):
         return keys[index]
 
     def __init__(self, tree, line_height=SURFER_LINE_HEIGHT):
-        self.line_height = line_height
+        # Reaches here straight from --target-kwargs, so it is checked
+        # rather than divided by: a zero or a quoted number would
+        # otherwise surface as a ZeroDivisionError or a TypeError
+        # traceback, from inside a height conversion, with no output.
+        try:
+            self.line_height = float(line_height)
+        except (TypeError, ValueError):
+            raise ValueError(f'line_height must be a number, got "{line_height}"') from None
+
+        if self.line_height <= 0:
+            raise ValueError(f"line_height must be positive, got {line_height}")
 
         # Number of rows currently visible. Every row is appended, so
         # this doubles as the index of the next one -- see _add_row.
@@ -268,21 +333,43 @@ class SurferTarget(Visitor):
         :return: the index the row sits at once every header is inserted.
         """
         for entry in self.pending:
-            if entry["header"] is not None:
+            if entry.header is not None:
                 continue
 
             self._focus(index)
-            self.genstr += f"group_marked {entry['word']}\n"
-            entry["header"] = index
+            self.genstr += self._add_command("group_marked", entry.word)
+            entry.header = index
             self.nvisible += 1
             index += 1
 
             # group_marked leaves the new group focused, so this renames
             # it and not one of its rows.
-            if entry["word"] != entry["name"]:
-                self.genstr += f"item_rename {entry['name']}\n"
+            self._rename(entry.word, entry.name)
 
         return index
+
+    @staticmethod
+    def _add_command(command, word):
+        """Write ``command`` with ``word`` as its optional argument.
+
+        The argument is left out entirely when there is no word, which is
+        how Surfer is told an item has no name. Writing it with an empty
+        argument instead is not the same thing: it is a parse error, and
+        the command is dropped.
+        """
+        return f"{command} {word}\n" if word else f"{command}\n"
+
+    def _rename(self, word, name):
+        """Restore the real name of the item just added, if it needs it.
+
+        An empty name needs no rename, and must not get one: ``item_rename``
+        takes the rest of the line, an empty rest is a parse error, and
+        the row would keep whatever the add command named it. That falls
+        out of the comparison -- ``word`` is derived from ``name``, so an
+        empty ``name`` yields an empty ``word`` and the two are equal.
+        """
+        if word != name:
+            self.genstr += f"item_rename {name}\n"
 
     def _add_row(self, command):
         """Emit a command that appends one row, and focus that row.
@@ -341,13 +428,18 @@ class SurferTarget(Visitor):
         """
 
         name = command_text(tree.value[0], f"{tree.filename}:{tree.line}")
-        entry = {"name": name, "word": bare_word(name, "group"), "header": None}
+        entry = PendingGroup(name)
 
         self.pending.append(entry)
         super().process_group(tree)
-        self.pending.remove(entry)
 
-        if entry["header"] is None:
+        # Pop rather than remove: groups are entered and left in order,
+        # so this entry is the last one -- and remove() would compare by
+        # value, which two same-named groups satisfy, unregistering the
+        # wrong one.
+        assert self.pending.pop() is entry
+
+        if entry.header is None:
             LOGGER.warning(
                 '%s:%i: group "%s" holds no row and was not created', tree.filename, tree.line, tree.value[0]
             )
@@ -355,11 +447,21 @@ class SurferTarget(Visitor):
 
         # Folding is how the target leaves a group: Surfer inserts into a
         # focused group when it is unfolded and after it when it is not,
-        # so folding the finished group puts the next sibling back at the
+        # so a folded group takes the next sibling after itself, at the
         # enclosing level. group_unfold_all in the footer undoes it.
-        self._focus(entry["header"])
+        self._focus(entry.header)
         self.genstr += "group_fold_recursive\n"
-        self.nvisible = entry["header"] + 1
+        self.nvisible = entry.header + 1
+
+        # Folding drops the focus. GroupFoldRecursive clears focused_item
+        # whenever the folded group contains the focused row, and
+        # subtree_contains(root, candidate) holds for root == candidate,
+        # so focusing the group in order to fold it is exactly what makes
+        # Surfer forget it. Without this second focus the next row is
+        # appended at the end of the tree at level 0, which silently
+        # matches the intent for a top-level group and breaks every
+        # nested one.
+        self._focus(entry.header)
 
     def process_divider(self, tree):
         """Method to process an ast.Divider node.
@@ -368,12 +470,10 @@ class SurferTarget(Visitor):
         """
 
         name = command_text(tree.value[0], f"{tree.filename}:{tree.line}")
-        word = bare_word(name, "divider")
+        word = bare_word(name)
 
-        self._add_row(f"\ndivider_add {word}\n")
-
-        if word != name:
-            self.genstr += f"item_rename {name}\n"
+        self._add_row("\n" + self._add_command("divider_add", word))
+        self._rename(word, name)
 
         # No radix: a divider carries no value to format.
         self._properties(tree, formats=False)
@@ -393,7 +493,13 @@ class SurferTarget(Visitor):
             path = tree.hierarchy.split("/")[1:] + value.split("/")
             fullname = ".".join(path)
 
-            self._add_row(f"variable_add {command_text(fullname, f'{tree.filename}:{tree.line}')}\n")
+            # Dropped rather than substituted: an altered path names a
+            # signal that is not in the dump, and Surfer would add no row
+            # where this file counted one.
+            if not representable_path(fullname, f"{tree.filename}:{tree.line}"):
+                continue
+
+            self._add_row(f"variable_add {fullname}\n")
             self._properties(tree)
 
         super().process_disp(tree)
