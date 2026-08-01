@@ -27,7 +27,7 @@ from wavedisp.ast import Block
 from wavedisp.targets.gtkwave import GTKWaveTarget
 from wavedisp.targets.modelsim import ModelsimTarget
 from wavedisp.targets.rivierapro import RivieraProTarget
-from wavedisp.targets.surfer import SurferTarget
+from wavedisp.targets.surfer import SURFER_LINE_HEIGHT, SurferTarget
 
 
 class LoggingLevelCounterHandler(logging.Handler):
@@ -67,6 +67,16 @@ def main():
         "-g", "--generator", type=str, default="generator", help="generator function name in the input file"
     )
     parser.add_argument("-a", "--kwargs", default="{}", help="arguments dictionary for the generator function in json")
+    parser.add_argument(
+        "--surfer-line-height",
+        type=float,
+        default=SURFER_LINE_HEIGHT,
+        help=(
+            "pixel height of one Surfer row, used to convert the height property "
+            "into the factor Surfer takes; match it to layout.waveforms_line_height "
+            "if your Surfer configuration changes it"
+        ),
+    )
     parser.add_argument("-v", "--verbose", action="store_true", help="verbose mode")
     parser.add_argument("-d", "--debug", action="store_true", help="debug mode")
 
@@ -101,7 +111,7 @@ def main():
     elif args.target == "rivierapro":
         target = RivieraProTarget(block)
     elif args.target == "surfer":
-        target = SurferTarget(block)
+        target = SurferTarget(block, line_height=args.surfer_line_height)
     elif args.target == "dot":
         fmod = open(args.output, "w")
         fmod.write(str(block.children[0]))

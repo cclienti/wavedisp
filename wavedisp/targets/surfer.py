@@ -92,8 +92,53 @@ def bare_word(text, fallback):
     return word if word else fallback
 
 
+#: Surfer's ``layout.waveforms_line_height`` default, in pixels. It is
+#: the only thing a height has to be divided by: a row is drawn
+#: ``waveforms_line_height * height_scaling_factor`` tall, with no
+#: clamping, so the ratio reproduces the requested pixel height exactly.
+#: A user who sets a different value in their own Surfer configuration
+#: has to say so -- see the ``line_height`` argument of SurferTarget.
+SURFER_LINE_HEIGHT = 16.0
+
+
+def height_scale(height, line_height, context):
+    """Convert a row height in pixels to the multiple Surfer expects.
+
+    ``height`` is the property as the other targets read it: Modelsim and
+    RivieraPro pass it to ``add wave -height`` as a pixel count. Surfer
+    has no pixel form, only a factor on its configured line height, so
+    the two only agree through this division.
+
+    :return: the factor, or None if the height is not a usable number.
+    """
+    try:
+        pixels = float(height)
+    except (TypeError, ValueError):
+        LOGGER.error('%s: height "%s" is not a number', context, height)
+        return None
+
+    if pixels <= 0:
+        LOGGER.error('%s: height "%s" is not positive', context, height)
+        return None
+
+    scale = pixels / line_height
+
+    # Trim the representation rather than the value: Surfer parses the
+    # argument as an f32, so 2 and 2.0 are the same row, and 1.875 has to
+    # survive intact.
+    return f"{scale:.4f}".rstrip("0").rstrip(".")
+
+
 class SurferTarget(Visitor):
-    """Code generator for the Surfer viewer."""
+    """Code generator for the Surfer viewer.
+
+    :param tree: AST tree instance.
+    :param float line_height: pixel height of one Surfer row, used to
+        convert the ``height`` property. Defaults to Surfer's own
+        default; override it to match a configuration that sets
+        ``layout.waveforms_line_height`` to something else.
+
+    """
 
     RadixDict = {
         "binary": "Binary",
@@ -161,7 +206,9 @@ class SurferTarget(Visitor):
 
         return keys[index]
 
-    def __init__(self, tree):
+    def __init__(self, tree, line_height=SURFER_LINE_HEIGHT):
+        self.line_height = line_height
+
         # Number of rows currently visible. Every row is appended, so
         # this doubles as the index of the next one -- see _add_row.
         self.nvisible = 0
@@ -256,7 +303,13 @@ class SurferTarget(Visitor):
         return index
 
     def _properties(self, tree, formats=True):
-        """Emit the appearance commands for the focused row."""
+        """Emit the appearance commands for the focused row.
+
+        ``formats`` is cleared for a divider: it carries no value to
+        format, and Surfer's height applies to variables only --
+        ``set_height_scaling_factor`` ignores every other kind of item,
+        so emitting it there would be a silent no-op.
+        """
 
         if formats and "radix" in tree.properties:
             radix = tree.properties["radix"]
@@ -274,15 +327,12 @@ class SurferTarget(Visitor):
                 except KeyError:
                     LOGGER.error('%s:%i: unkown color "%s"', tree.filename, tree.line, color)
 
-        if "height" in tree.properties:
+        if formats and "height" in tree.properties:
             height = tree.properties["height"]
             if height != "":
-                # Modelsim and RivieraPro read this as a pixel height,
-                # Surfer as a multiple of the line height -- it suggests
-                # 1, 2, 4, 8 and 16. The value is passed through as it
-                # stands; a height written for Modelsim will be enormous
-                # here.
-                self.genstr += f"item_set_height {height}\n"
+                scale = height_scale(height, self.line_height, f"{tree.filename}:{tree.line}")
+                if scale is not None:
+                    self.genstr += f"item_set_height {scale}\n"
 
     def process_group(self, tree):
         """Method to process an ast.Group node.

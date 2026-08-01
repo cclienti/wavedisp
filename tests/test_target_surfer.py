@@ -22,7 +22,7 @@
 import unittest
 
 from wavedisp.ast import ASTBase, Block, Disp, Divider, Group, Hierarchy
-from wavedisp.targets.surfer import SurferTarget, alpha_idx, bare_word
+from wavedisp.targets.surfer import SURFER_LINE_HEIGHT, SurferTarget, alpha_idx, bare_word, height_scale
 
 SURFER_GENERATOR_REF = """# Wavedisp generated Surfer command file
 
@@ -154,3 +154,64 @@ class TestBareWord(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestHeightScale(unittest.TestCase):
+    """A height is pixels for Modelsim, a line-height factor for Surfer.
+
+    Surfer draws a row `waveforms_line_height * factor` tall and clamps
+    nothing, so dividing by that line height reproduces the pixel height
+    the other targets would have given.
+    """
+
+    def test_the_default_reference_is_surfers_own(self):
+        self.assertEqual(SURFER_LINE_HEIGHT, 16.0)
+
+    def test_a_multiple_comes_out_without_a_decimal_point(self):
+        self.assertEqual(height_scale(32, 16.0, "ctx"), "2")
+        self.assertEqual(height_scale(16, 16.0, "ctx"), "1")
+
+    def test_a_ratio_is_kept(self):
+        self.assertEqual(height_scale(30, 16.0, "ctx"), "1.875")
+        self.assertEqual(height_scale(8, 16.0, "ctx"), "0.5")
+
+    def test_a_string_height_is_accepted(self):
+        """Properties are free-form, and a wave file may quote the value."""
+        self.assertEqual(height_scale("32", 16.0, "ctx"), "2")
+
+    def test_a_configured_line_height_is_honoured(self):
+        self.assertEqual(height_scale(32, 8.0, "ctx"), "4")
+
+    def test_a_bad_height_is_reported_not_emitted(self):
+        with self.assertLogs("wavegen", level="ERROR"):
+            self.assertIsNone(height_scale("tall", 16.0, "ctx"))
+        with self.assertLogs("wavegen", level="ERROR"):
+            self.assertIsNone(height_scale(0, 16.0, "ctx"))
+        with self.assertLogs("wavegen", level="ERROR"):
+            self.assertIsNone(height_scale(-4, 16.0, "ctx"))
+
+
+class TestHeightPlacement(unittest.TestCase):
+    """Where a height may and may not be emitted."""
+
+    def setUp(self):
+        ASTBase.reset_unique_id()
+
+    def test_a_signal_gets_the_converted_factor(self):
+        blk = Block()
+        blk.add(Hierarchy("/tb")).add(Disp("sig", height=32))
+        blk.forward()
+        self.assertIn("item_set_height 2\n", SurferTarget(blk).genstr)
+
+    def test_the_reference_is_configurable(self):
+        blk = Block()
+        blk.add(Hierarchy("/tb")).add(Disp("sig", height=32))
+        blk.forward()
+        self.assertIn("item_set_height 4\n", SurferTarget(blk, line_height=8.0).genstr)
+
+    def test_a_divider_gets_no_height(self):
+        """set_height_scaling_factor ignores every item but a variable."""
+        blk = Block()
+        blk.add(Hierarchy("/tb")).add(Divider("d", height=32))
+        blk.forward()
+        self.assertNotIn("item_set_height", SurferTarget(blk).genstr)

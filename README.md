@@ -20,6 +20,11 @@ back. Two consequences are worth knowing:
 * a command file is split on `;` and truncated at `#` before anything is parsed, and it has no quoting whatsoever, so
   those two characters cannot appear in a name. They are replaced by `_` and reported.
 
+The `height` property keeps its meaning across targets. Modelsim and RivieraPro take a pixel count; Surfer has no pixel
+form, only a factor on its configured line height, and draws a row `waveforms_line_height * factor` tall. The target
+divides by that line height, so `height=32` gives the same 32-pixel row everywhere. Pass `--surfer-line-height` if your
+Surfer configuration changes `layout.waveforms_line_height` from its default of 16.
+
 Group and divider names are not otherwise restricted: Surfer only accepts a single bare word there, so the target adds
 the item under a reduced name and immediately renames it to the real one.
 
