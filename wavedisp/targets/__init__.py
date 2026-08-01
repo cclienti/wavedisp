@@ -18,3 +18,14 @@
 # Copyright (C) 2019 Christophe Clienti
 
 """Wavedisp targets initialization."""
+
+
+class TargetOptionError(ValueError):
+    """A target was given an option value it cannot use.
+
+    Its own type, rather than a plain ValueError, so that the caller
+    reporting bad --target-kwargs catches only that. A target does all of
+    its work in ``__init__``, so catching ValueError around the
+    construction would also swallow one raised anywhere in the traversal
+    and blame it on an option the user did pass correctly.
+    """

@@ -34,9 +34,11 @@ gtkwave's ``getTotalNumTraces``. See ``_focus`` for what that costs.
 """
 
 import logging
+import math
 import re
 
 from ..visitor import Visitor
+from . import TargetOptionError
 from .x11colors import X11_COLORS
 
 LOGGER = logging.getLogger("wavegen")
@@ -54,11 +56,11 @@ def alpha_idx(index):
     return "".join(chr(ord("a") + int(digit, 16)) for digit in f"{index:x}")
 
 
-#: The characters a command file cannot carry anywhere, at all. It is
-#: split into lines, then on ``;``, then truncated at ``#``, before any
-#: command is parsed, and the splitter has no quoting or escaping -- so
-#: there is no spelling of a name or a path containing one of these that
-#: survives.
+#: The characters a command file cannot carry anywhere, at all. Each
+#: line is trimmed, truncated at the first ``#``, then split on ``;``,
+#: all before any command is parsed, and none of it can be quoted or
+#: escaped -- so there is no spelling of a name or a path containing one
+#: of these that survives.
 UNREPRESENTABLE = "#;\n\r"
 
 
@@ -266,13 +268,23 @@ class SurferTarget(Visitor):
         # rather than divided by: a zero or a quoted number would
         # otherwise surface as a ZeroDivisionError or a TypeError
         # traceback, from inside a height conversion, with no output.
+        # bool first: it is a subclass of int, so float(True) is 1.0 and
+        # a json `true` would quietly become a 1-pixel line height.
+        if isinstance(line_height, bool):
+            raise TargetOptionError(f"line_height must be a number, got {line_height}")
+
         try:
             self.line_height = float(line_height)
         except (TypeError, ValueError):
-            raise ValueError(f'line_height must be a number, got "{line_height}"') from None
+            raise TargetOptionError(f'line_height must be a number, got "{line_height}"') from None
+
+        # Python's json accepts the non-standard Infinity and NaN, and
+        # neither is caught by a comparison: nan <= 0 is False.
+        if not math.isfinite(self.line_height):
+            raise TargetOptionError(f"line_height must be finite, got {line_height}")
 
         if self.line_height <= 0:
-            raise ValueError(f"line_height must be positive, got {line_height}")
+            raise TargetOptionError(f"line_height must be positive, got {line_height}")
 
         # Number of rows currently visible. Every row is appended, so
         # this doubles as the index of the next one -- see _add_row.
@@ -358,6 +370,13 @@ class SurferTarget(Visitor):
             self._focus(index)
             self._emit(self._add_command("group_marked", entry.word))
             self._grouped = True
+
+            # An unnamed group is the one thing Surfer will not do: with
+            # no argument group_marked passes None on and add_group
+            # substitutes the literal "Group", and the rename that would
+            # fix it cannot carry an empty name either.
+            if not entry.name.strip():
+                LOGGER.warning('Surfer cannot leave a group unnamed, it will read "Group"')
             entry.header = index
             self.nvisible += 1
             index += 1
@@ -382,12 +401,15 @@ class SurferTarget(Visitor):
     def _rename(self, word, name):
         """Restore the real name of the item just added, if it needs it.
 
-        An empty name needs no rename, and must not get one: ``item_rename``
-        takes the rest of the line, an empty rest is a parse error, and
-        the row would keep whatever the add command named it. That falls
-        out of the comparison -- ``word`` is derived from ``name``, so an
-        empty ``name`` yields an empty ``word`` and the two are equal.
+        A name that is empty or only whitespace cannot be sent at all:
+        Surfer trims each line before parsing it, so the argument is gone
+        and ``item_rename`` fails with "missing parameters". The command
+        is left out rather than emitted and rejected -- the add command
+        has already left the item unnamed.
         """
+        if not name.strip():
+            return
+
         if word != name:
             self._emit(f"item_rename {name}\n")
 

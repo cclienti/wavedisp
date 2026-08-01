@@ -29,7 +29,7 @@ import logging
 import unittest
 
 from wavedisp.ast import ASTBase, Block, Disp, Hierarchy
-from wavedisp.cli import TARGETS, check_target_kwargs, make_target
+from wavedisp.cli import TARGETS, check_target_kwargs, decode_kwargs, make_target
 from wavedisp.targets.surfer import SurferTarget
 
 
@@ -122,6 +122,53 @@ class TestMalformedTargetKwargs(unittest.TestCase):
 
     def test_a_value_the_target_rejects_is_reported(self):
         """The target raises ValueError; the CLI turns it into a message."""
+        with self.assertLogs("test:cli", level="ERROR") as logs:
+            self.assertIsNone(make_target("surfer", tree(), self.logger, {"line_height": 0}))
+        self.assertIn("positive", logs.output[0])
+
+
+class TestDecodeKwargs(unittest.TestCase):
+    """Both -a and -T are user-written json and neither may raise."""
+
+    def setUp(self):
+        self.logger = logging.getLogger("test:cli")
+
+    def test_an_object_decodes(self):
+        self.assertEqual(decode_kwargs('{"a": 1}', "-T", self.logger), {"a": 1})
+
+    def test_malformed_json_is_reported(self):
+        with self.assertLogs("test:cli", level="ERROR") as logs:
+            self.assertIsNone(decode_kwargs("{oops", "-T", self.logger))
+        self.assertIn("not valid json", logs.output[0])
+
+    def test_a_non_object_is_reported(self):
+        for text in ("null", "3", '"text"', "[1, 2]"):
+            with self.subTest(text=text), self.assertLogs("test:cli", level="ERROR") as logs:
+                self.assertIsNone(decode_kwargs(text, "-a", self.logger))
+            self.assertIn("must be a json object", logs.output[0])
+
+    def test_a_generation_error_is_not_reported_as_a_bad_option(self):
+        """Only TargetOptionError means "you passed a bad option".
+
+        Every target does its work in __init__, so catching plain
+        ValueError around the construction would blame the user's -T for
+        a fault raised anywhere in the traversal.
+        """
+
+        class Exploding:
+            def __init__(self, tree):
+                raise ValueError("boom from deep inside generation")
+
+        TARGETS["exploding"] = Exploding
+        try:
+            with self.assertRaises(ValueError) as caught:
+                make_target("exploding", tree(), self.logger, {})
+            self.assertIn("deep inside generation", str(caught.exception))
+        finally:
+            del TARGETS["exploding"]
+
+    def test_a_bad_option_value_is_reported(self):
+        """A TargetOptionError, by contrast, is caught and logged."""
         with self.assertLogs("test:cli", level="ERROR") as logs:
             self.assertIsNone(make_target("surfer", tree(), self.logger, {"line_height": 0}))
         self.assertIn("positive", logs.output[0])
