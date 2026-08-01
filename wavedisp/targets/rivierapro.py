@@ -17,7 +17,7 @@
 #
 # Copyright (C) 2019 Christophe Clienti
 
-"""Generator for the RivieraPro viewer."""
+"""Target for the RivieraPro viewer."""
 
 import logging
 
@@ -28,7 +28,7 @@ LOGGER = logging.getLogger("wavegen")
 
 
 class RivieraProTarget(Visitor):
-    """Code generator for the RivieraPro viewer."""
+    """Target for the RivieraPro viewer."""
 
     RadixDict = {
         "binary": "-binary",
