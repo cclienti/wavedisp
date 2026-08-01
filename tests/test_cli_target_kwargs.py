@@ -29,7 +29,7 @@ import logging
 import unittest
 
 from wavedisp.ast import ASTBase, Block, Disp, Hierarchy
-from wavedisp.cli import TARGETS, make_target
+from wavedisp.cli import TARGETS, check_target_kwargs, make_target
 from wavedisp.targets.surfer import SurferTarget
 
 
@@ -75,6 +75,22 @@ class TestMakeTarget(unittest.TestCase):
         with self.assertLogs("test:cli", level="ERROR") as logs:
             make_target("modelsim", tree(), self.logger, nope=1)
         self.assertIn("no option", logs.output[0])
+
+    def test_every_target_name_refuses_an_option_it_cannot_use(self):
+        """Including "dot", which has no target class to check against.
+
+        dot renders the AST directly and never reaches make_target, so
+        it was the one name that accepted --target-kwargs and wrote the
+        file as though the option had been applied.
+        """
+        for name in [*TARGETS, "dot"]:
+            with self.subTest(target=name), self.assertLogs("test:cli", level="ERROR") as logs:
+                accepted = set() if name == "dot" else None
+                if accepted is None:
+                    self.assertIsNone(make_target(name, tree(), self.logger, nosuchoption=1))
+                else:
+                    self.assertFalse(check_target_kwargs(name, accepted, {"nosuchoption": 1}, self.logger))
+            self.assertIn("nosuchoption", logs.output[0])
 
     def test_an_unknown_target_is_refused(self):
         with self.assertLogs("test:cli", level="ERROR"):

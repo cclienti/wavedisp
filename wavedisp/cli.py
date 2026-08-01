@@ -41,13 +41,33 @@ TARGETS = {
 }
 
 
+def check_target_kwargs(name, accepted, kwargs, logger):
+    """Report the --target-kwargs entries ``name`` has no use for.
+
+    An option is checked rather than passed straight in, because every
+    other outcome is silent or ugly: handed to a target that does not
+    take it, it raises a TypeError traceback, and merely ignored it
+    produces a file that quietly lacks the requested layout.
+
+    :return: True when every key is accepted.
+
+    """
+
+    unknown = sorted(set(kwargs) - set(accepted))
+    if not unknown:
+        return True
+
+    logger.error(
+        'target "%s" does not accept %s (it takes %s)',
+        name,
+        ", ".join(f'"{key}"' for key in unknown),
+        ", ".join(f'"{key}"' for key in sorted(accepted)) if accepted else "no option",
+    )
+    return False
+
+
 def make_target(name, tree, logger, **kwargs):
     """Instantiate the target ``name`` over ``tree``.
-
-    The keyword arguments come from --target-kwargs, so they are checked
-    against what the target actually takes rather than passed straight
-    in: an option meant for another target would otherwise surface as a
-    TypeError traceback, and one silently accepted would be worse.
 
     :return: the target instance, or None if it could not be built.
 
@@ -60,15 +80,7 @@ def make_target(name, tree, logger, **kwargs):
         return None
 
     parameters = inspect.signature(target_class.__init__).parameters
-    accepted = set(parameters) - {"self", "tree"}
-    unknown = sorted(set(kwargs) - accepted)
-    if unknown:
-        logger.error(
-            'target "%s" does not accept %s (it takes %s)',
-            name,
-            ", ".join(f'"{key}"' for key in unknown),
-            ", ".join(f'"{key}"' for key in sorted(accepted)) if accepted else "no option",
-        )
+    if not check_target_kwargs(name, set(parameters) - {"self", "tree"}, kwargs, logger):
         return None
 
     return target_class(tree, **kwargs)
@@ -144,6 +156,11 @@ def main():
     block.forward()
 
     if args.target == "dot":
+        # Rendered straight from the AST, with no target class to carry
+        # an option -- but it still has to refuse one rather than write
+        # the file as if it had been applied.
+        if not check_target_kwargs("dot", set(), target_kwargs, logger):
+            exit(1)
         fmod = open(args.output, "w")
         fmod.write(str(block.children[0]))
         fmod.close()
