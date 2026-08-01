@@ -25,6 +25,7 @@ import json
 import logging
 
 from wavedisp.ast import Block
+from wavedisp.targets import TargetOptionError
 from wavedisp.targets.gtkwave import GTKWaveTarget
 from wavedisp.targets.modelsim import ModelsimTarget
 from wavedisp.targets.rivierapro import RivieraProTarget
@@ -39,6 +40,30 @@ TARGETS = {
     "rivierapro": RivieraProTarget,
     "surfer": SurferTarget,
 }
+
+
+def decode_kwargs(text, option, logger):
+    """Decode one of the json dictionaries the command line takes.
+
+    :return: the dictionary, or None if it was not one.
+
+    """
+
+    try:
+        decoded = json.loads(text)
+    except json.JSONDecodeError as error:
+        logger.error("%s is not valid json: %s", option, error)
+        return None
+
+    if not isinstance(decoded, dict):
+        logger.error(
+            "%s must be a json object, got %s",
+            option,
+            type(decoded).__name__ if decoded is not None else "null",
+        )
+        return None
+
+    return decoded
 
 
 def check_target_kwargs(name, accepted, kwargs, logger):
@@ -97,9 +122,10 @@ def make_target(name, tree, logger, kwargs):
 
     try:
         return target_class(tree, **kwargs)
-    except ValueError as error:
-        # A target validates its own options; it cannot report them,
-        # since it has no logger and is used outside the CLI too.
+    except TargetOptionError as error:
+        # Only that type: a target does all of its work in __init__, so
+        # catching ValueError here would also swallow one raised
+        # anywhere in the traversal and blame it on an option.
         logger.error('target "%s": %s', name, error)
         return None
 
@@ -164,10 +190,14 @@ def main():
 
     # -a goes to the generator function in the input file, -T to the
     # target class: one parameterises the description, the other how it
-    # is rendered.
-    kwargs = json.loads(args.kwargs)
+    # is rendered. Both are user-written json, so neither is decoded
+    # straight into a subscript or a splat.
+    kwargs = decode_kwargs(args.kwargs, "-a/--kwargs", logger)
+    target_kwargs = decode_kwargs(args.target_kwargs, "-T/--target-kwargs", logger)
+    if kwargs is None or target_kwargs is None:
+        exit(1)
+
     kwargs["__generator"] = args.generator
-    target_kwargs = json.loads(args.target_kwargs)
 
     block = Block(__filename=args.input, __line=0)
     block.include(args.input, **kwargs)

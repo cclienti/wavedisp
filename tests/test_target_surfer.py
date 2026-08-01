@@ -24,6 +24,7 @@ import sys
 import unittest
 
 from wavedisp.ast import ASTBase, Block, Disp, Divider, Group, Hierarchy
+from wavedisp.targets import TargetOptionError
 from wavedisp.targets.surfer import (
     SURFER_LINE_HEIGHT,
     SurferTarget,
@@ -378,6 +379,69 @@ class TestOptimisedInterpreter(unittest.TestCase):
         plain = self.generate()
         self.assertNotIn("group_marked", plain)
         self.assertEqual(self.generate("-O"), plain)
+
+
+class TestNamesSurferCannotCarry(unittest.TestCase):
+    """A name that survives neither the add command nor a rename."""
+
+    def setUp(self):
+        ASTBase.reset_unique_id()
+
+    def build(self, node):
+        blk = Block()
+        blk.add(Hierarchy("/tb")).add(node)
+        blk.forward()
+        return blk
+
+    def test_a_whitespace_name_emits_no_rename(self):
+        """Surfer trims the line, so the argument would be gone."""
+        out = SurferTarget(self.build(Divider("   "))).genstr
+        self.assertNotIn("item_rename", out)
+        self.assertIn("divider_add\n", out)
+
+    def test_a_punctuation_name_is_still_renamed(self):
+        """Empty *word*, but a name that can be carried."""
+        out = SurferTarget(self.build(Divider("---"))).genstr
+        self.assertIn("divider_add\n", out)
+        self.assertIn("item_rename ---\n", out)
+
+    def test_a_nameless_group_is_reported(self):
+        """Surfer substitutes the literal "Group" and cannot be told otherwise."""
+        blk = Block()
+        blk.add(Hierarchy("/tb")).add(Group("")).add(Disp("sig"))
+        blk.forward()
+        with self.assertLogs("wavegen", level="WARNING") as logs:
+            out = SurferTarget(blk).genstr
+        self.assertIn("Group", logs.output[0])
+        self.assertIn("group_marked\n", out)
+        self.assertNotIn("item_rename", out)
+
+
+class TestLineHeightEdgeValues(unittest.TestCase):
+    """json can express more numbers than the guard used to reject."""
+
+    def setUp(self):
+        ASTBase.reset_unique_id()
+        self.blk = Block()
+        self.blk.add(Hierarchy("/tb")).add(Disp("sig", height=32))
+        self.blk.forward()
+
+    def test_a_boolean_is_refused(self):
+        """bool is a subclass of int, so float(True) would be 1.0."""
+        for value in (True, False):
+            with self.subTest(value=value), self.assertRaises(TargetOptionError):
+                SurferTarget(self.blk, line_height=value)
+
+    def test_non_finite_values_are_refused(self):
+        """Python's json accepts Infinity and NaN; nan <= 0 is False."""
+        for value in (float("inf"), float("-inf"), float("nan")):
+            with self.subTest(value=value), self.assertRaises(TargetOptionError):
+                SurferTarget(self.blk, line_height=value)
+
+    def test_the_error_is_the_dedicated_type(self):
+        """So the CLI can catch it without swallowing generation errors."""
+        with self.assertRaises(TargetOptionError):
+            SurferTarget(self.blk, line_height=0)
 
 
 if __name__ == "__main__":

@@ -125,11 +125,11 @@ class SurferModel:
         before, level = self.insert_position()
         self._insert(Item("variable", path, level), before, level)
 
-    def divider_add(self, name):
+    def divider_add(self, name=" "):
         before, level = self.insert_position()
         self._insert(Item("divider", name, level), before, level)
 
-    def group_marked(self, name):
+    def group_marked(self, name="Group"):
         if self.focused is None:
             return  # no selection and no focus: Surfer does nothing
         before, level = self.insert_position()
@@ -156,7 +156,12 @@ class SurferModel:
     def item_unfocus(self):
         self.focused = None
 
-    def item_rename(self, name):
+    def item_rename(self, name=""):
+        # Surfer trims the line first, so an empty argument is a parse
+        # error and the command is dropped, not applied.
+        if not name.strip():
+            self.errors.append("item_rename with no name")
+            return
         self._focused_item().name = name
 
     def item_set_format(self, value):
@@ -186,7 +191,12 @@ class SurferModel:
         end = index + 1
         while end < len(self.items) and self.items[end].level > item.level:
             end += 1
-        if index <= self.to_item_index(self.focused) < end:
+
+        # No upper bound: subtree_contains(root, candidate) is
+        # (root..subtree_end(candidate)).contains(candidate), which holds
+        # for every candidate at or after root, not only for the ones
+        # inside the folded group.
+        if index <= self.to_item_index(self.focused):
             self.focused = None
 
         item.unfolded = False
@@ -307,37 +317,47 @@ class TestReplay(unittest.TestCase):
             ],
         )
 
-    def test_a_row_after_a_nested_group_stays_in_the_enclosing_group(self):
-        """The case the first dpmemrf run happened not to cover.
+    def test_a_row_after_each_level_of_a_three_deep_nesting(self):
+        """Leaving a group must land at the level that group sat at.
 
-        Folding is what returns to the enclosing level, and folding also
-        drops Surfer's focus, so without focusing the folded group again
-        the row lands at the end of the tree at level 0. At top level
-        that is the right place by coincidence; one level in, it escapes
-        the group.
+        Three levels, with a row after each one, so that returning to
+        level 2, then 1, then 0 is each exercised separately -- folding
+        drops Surfer's focus, and the level it comes back at is only
+        right if the folded group is focused again.
         """
         blk = Block()
         hier = blk.add(Hierarchy("/tb"))
-        outer = hier.add(Group("outer"))
-        outer.add(Disp("first"))
-        inner = outer.add(Group("inner"))
-        inner.add(Disp(["x", "y"]))
-        outer.add(Disp("last"))
-        hier.add(Disp("after"))
+        a = hier.add(Group("a"))
+        b = a.add(Group("b"))
+        c = b.add(Group("c"))
+        c.add(Disp("deep"))
+        b.add(Disp("after_c"))
+        a.add(Disp("after_b"))
+        hier.add(Disp("after_a"))
         model = replay(blk)
         self.assertEqual(model.errors, [])
         self.assertEqual(
             model.render(),
             [
-                (0, "group", "outer"),
-                (1, "variable", "tb.first"),
-                (1, "group", "inner"),
-                (2, "variable", "tb.x"),
-                (2, "variable", "tb.y"),
-                (1, "variable", "tb.last"),
-                (0, "variable", "tb.after"),
+                (0, "group", "a"),
+                (1, "group", "b"),
+                (2, "group", "c"),
+                (3, "variable", "tb.deep"),
+                (2, "variable", "tb.after_c"),
+                (1, "variable", "tb.after_b"),
+                (0, "variable", "tb.after_a"),
             ],
         )
+
+    def test_a_nameless_divider_replays(self):
+        """The argument-less form the empty-name fix emits."""
+        blk = Block()
+        hier = blk.add(Hierarchy("/tb"))
+        hier.add(Divider("   "))
+        hier.add(Disp("sig"))
+        model = replay(blk)
+        self.assertEqual(model.errors, [])
+        self.assertEqual([i.kind for i in model.items], ["divider", "variable"])
 
     def test_group_opening_on_a_nested_group(self):
         """The first row of a group can itself be a group."""

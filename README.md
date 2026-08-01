@@ -17,8 +17,8 @@ back. Two consequences are worth knowing:
 
 * a signal that is missing from the dump adds no row, and every command after it lands one row off. Surfer logs the
   failed `variable_add`, and its `dump_tree` command prints the tree that was actually built;
-* a command file is split into lines, then on `;`, then truncated at `#`, before anything is parsed, and it has no
-  quoting whatsoever, so none of those three can appear anywhere. In a *name* they are replaced by `_` and reported —
+* each line of a command file is trimmed, truncated at the first `#`, then split on `;`, all before anything is
+  parsed, and none of it can be quoted or escaped, so none of those three can appear anywhere. In a *name* they are replaced by `_` and reported —
   a recognisable wrong name beats a truncated one. In a *signal path* the signal is dropped instead and reported:
   a substituted path names something the dump does not contain, so Surfer would add no row where this file counted
   one, and every later index would be off.
