@@ -17,7 +17,7 @@
 #
 # Copyright (C) 2019 Christophe Clienti
 
-"""Generator for the GTKWave viewer."""
+"""Target for the GTKWave viewer."""
 
 import logging
 
@@ -82,7 +82,7 @@ def highlight_added(var):
 
 
 class GTKWaveTarget(Visitor):
-    """Code generator for the GTKWave viewer."""
+    """Target for the GTKWave viewer."""
 
     RadixDict = {
         "binary": "Binary",

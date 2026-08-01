@@ -17,7 +17,7 @@
 #
 # Copyright (C) 2019 Christophe Clienti
 
-"""Generator for the Modelsim viewer."""
+"""Target for the Modelsim viewer."""
 
 import logging
 
@@ -28,7 +28,7 @@ LOGGER = logging.getLogger("wavegen")
 
 
 class ModelsimTarget(Visitor):
-    """Code generator for the Modelsim viewer."""
+    """Target for the Modelsim viewer."""
 
     RadixDict = {
         "binary": "binary",

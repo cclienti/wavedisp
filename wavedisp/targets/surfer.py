@@ -17,7 +17,7 @@
 #
 # Copyright (C) 2019 Christophe Clienti
 
-"""Generator for the Surfer viewer.
+"""Target for the Surfer viewer.
 
 Surfer has no scripting language. A command file is a flat list of the
 same commands the in-application prompt accepts, replayed once the
@@ -130,7 +130,7 @@ def height_scale(height, line_height, context):
 
 
 class SurferTarget(Visitor):
-    """Code generator for the Surfer viewer.
+    """Target for the Surfer viewer.
 
     :param tree: AST tree instance.
     :param float line_height: pixel height of one Surfer row, used to

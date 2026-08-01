@@ -20,6 +20,7 @@
 """Command line interface."""
 
 import argparse
+import inspect
 import json
 import logging
 
@@ -27,7 +28,50 @@ from wavedisp.ast import Block
 from wavedisp.targets.gtkwave import GTKWaveTarget
 from wavedisp.targets.modelsim import ModelsimTarget
 from wavedisp.targets.rivierapro import RivieraProTarget
-from wavedisp.targets.surfer import SURFER_LINE_HEIGHT, SurferTarget
+from wavedisp.targets.surfer import SurferTarget
+
+#: Targets that turn an AST into a file, by the name -t takes. "dot" is
+#: not here: it renders the AST itself rather than going through a
+#: target class.
+TARGETS = {
+    "gtkwave": GTKWaveTarget,
+    "modelsim": ModelsimTarget,
+    "rivierapro": RivieraProTarget,
+    "surfer": SurferTarget,
+}
+
+
+def make_target(name, tree, logger, **kwargs):
+    """Instantiate the target ``name`` over ``tree``.
+
+    The keyword arguments come from --target-kwargs, so they are checked
+    against what the target actually takes rather than passed straight
+    in: an option meant for another target would otherwise surface as a
+    TypeError traceback, and one silently accepted would be worse.
+
+    :return: the target instance, or None if it could not be built.
+
+    """
+
+    try:
+        target_class = TARGETS[name]
+    except KeyError:
+        logger.error('target "%s" not supported', name)
+        return None
+
+    parameters = inspect.signature(target_class.__init__).parameters
+    accepted = set(parameters) - {"self", "tree"}
+    unknown = sorted(set(kwargs) - accepted)
+    if unknown:
+        logger.error(
+            'target "%s" does not accept %s (it takes %s)',
+            name,
+            ", ".join(f'"{key}"' for key in unknown),
+            ", ".join(f'"{key}"' for key in sorted(accepted)) if accepted else "no option",
+        )
+        return None
+
+    return target_class(tree, **kwargs)
 
 
 class LoggingLevelCounterHandler(logging.Handler):
@@ -67,16 +111,7 @@ def main():
         "-g", "--generator", type=str, default="generator", help="generator function name in the input file"
     )
     parser.add_argument("-a", "--kwargs", default="{}", help="arguments dictionary for the generator function in json")
-    parser.add_argument(
-        "--surfer-line-height",
-        type=float,
-        default=SURFER_LINE_HEIGHT,
-        help=(
-            "pixel height of one Surfer row, used to convert the height property "
-            "into the factor Surfer takes; match it to layout.waveforms_line_height "
-            "if your Surfer configuration changes it"
-        ),
-    )
+    parser.add_argument("-T", "--target-kwargs", default="{}", help="arguments dictionary for the target in json")
     parser.add_argument("-v", "--verbose", action="store_true", help="verbose mode")
     parser.add_argument("-d", "--debug", action="store_true", help="debug mode")
 
@@ -97,28 +132,25 @@ def main():
 
     logger = logging.getLogger("wavegen:cli")
 
+    # -a goes to the generator function in the input file, -T to the
+    # target class: one parameterises the description, the other how it
+    # is rendered.
     kwargs = json.loads(args.kwargs)
     kwargs["__generator"] = args.generator
+    target_kwargs = json.loads(args.target_kwargs)
 
     block = Block(__filename=args.input, __line=0)
     block.include(args.input, **kwargs)
     block.forward()
 
-    if args.target == "gtkwave":
-        target = GTKWaveTarget(block)
-    elif args.target == "modelsim":
-        target = ModelsimTarget(block)
-    elif args.target == "rivierapro":
-        target = RivieraProTarget(block)
-    elif args.target == "surfer":
-        target = SurferTarget(block, line_height=args.surfer_line_height)
-    elif args.target == "dot":
+    if args.target == "dot":
         fmod = open(args.output, "w")
         fmod.write(str(block.children[0]))
         fmod.close()
         exit(0)
-    else:
-        logger.error('target "%s" not supported', args.target)
+
+    target = make_target(args.target, block, logger, **target_kwargs)
+    if target is None:
         exit(1)
 
     try:
