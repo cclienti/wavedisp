@@ -39,6 +39,12 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@v5
 
+      # The gtkwave target emits TCL, and the quoting tests check it by
+      # running it. They skip themselves when tclsh is missing, so without
+      # this the runner image silently decides whether they run at all.
+      - name: Install tclsh
+        run: sudo apt-get install -y --no-install-recommends tcl
+
       - name: Run pytest
         run: uv run --group dev pytest
 
