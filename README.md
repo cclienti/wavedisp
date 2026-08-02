@@ -413,6 +413,28 @@ kind of thing that has gone unnoticed as a result.
 
 The GTKWave and Surfer targets are checked against the real viewers.
 
+## Checking a wave file against a dump
+A wave file is written by hand and nothing else confronts it with the design: a renamed instance or a signal that moved
+shows up as an empty row in the viewer, silently. Pass a dump of the simulation and every declared signal is looked up
+in it, the ones that are missing being reported with the file and line they were declared on:
+
+```sh
+wavedisp -t gtkwave -o tb.tcl --check tb.fst tb.wave.py
+```
+
+The dump may be a VCD, FST, LXT, LXT2 or VZT file, gzipped or not, and the format is recognised from the content rather
+than from the suffix. Only the declarations are read, never the value changes, so the check costs the same on a dump of
+a few kilobytes and on one of several gigabytes. The generation is not vetoed by a failed check, but the exit status is.
+
+The `wavedisp.dump` package does that lookup and nothing else:
+
+```python
+from wavedisp.dump import read_signals
+
+signals = read_signals('tb.fst')
+'tb.dut.clk' in signals
+```
+
 ## License
 
 Wavedisp is distributed under the GPLv3, whose complete text can be found

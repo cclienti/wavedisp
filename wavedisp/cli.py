@@ -25,6 +25,8 @@ import json
 import logging
 
 from wavedisp.ast import Block
+from wavedisp.checker import SignalChecker
+from wavedisp.dump import DumpError, read_signals
 from wavedisp.targets import TargetOptionError
 from wavedisp.targets.gtkwave import GTKWaveTarget
 from wavedisp.targets.modelsim import ModelsimTarget
@@ -144,6 +146,42 @@ class LoggingLevelCounterHandler(logging.Handler):
         self.level_counter[name] += 1
 
 
+def error_status() -> int:
+    """Return the exit status the errors logged so far call for."""
+
+    return 1 if LoggingLevelCounterHandler.level_counter.get("ERROR") else 0
+
+
+def check_signals(block, filename, logger):
+    """Report the signals of ``block`` that ``filename`` does not hold.
+
+    The wave file is still generated: a signal missing from one dump may
+    well be there in the next run, and the exit status already says the
+    check failed.
+
+    :param block: root of the AST, hierarchies already forwarded.
+    :param str filename: dump file to read the signal names from.
+    :param logger: logger to report on.
+    """
+
+    try:
+        signals = read_signals(filename)
+    except (OSError, DumpError) as error:
+        logger.error('cannot read the dump "%s": %s', filename, error)
+        return
+
+    checker = SignalChecker(signals, filename)
+    checker.visit(block)
+
+    logger.info(
+        'checked %i signals against the %i signals of "%s" (%s)',
+        checker.checked,
+        len(signals),
+        filename,
+        signals.format_name,
+    )
+
+
 def main():
     """Command line interface entry point."""
 
@@ -168,6 +206,15 @@ def main():
     )
     parser.add_argument("-a", "--kwargs", default="{}", help="arguments dictionary for the generator function in json")
     parser.add_argument("-T", "--target-kwargs", default="{}", help="arguments dictionary for the target in json")
+    parser.add_argument(
+        "-c",
+        "--check",
+        help=(
+            "dump file the declared signals must be found in, "
+            "in the vcd, fst, lxt, lxt2 or vzt format; a signal that is "
+            "missing from it is reported as an error"
+        ),
+    )
     parser.add_argument("-v", "--verbose", action="store_true", help="verbose mode")
     parser.add_argument("-d", "--debug", action="store_true", help="debug mode")
 
@@ -203,6 +250,9 @@ def main():
     block.include(args.input, **kwargs)
     block.forward()
 
+    if args.check:
+        check_signals(block, args.check, logger)
+
     if args.target == "dot":
         # Rendered straight from the AST, with no target class to carry
         # an option -- but it still has to refuse one rather than write
@@ -212,7 +262,9 @@ def main():
         fmod = open(args.output, "w")
         fmod.write(str(block.children[0]))
         fmod.close()
-        exit(0)
+        # Not a plain exit(0): a --check that found a missing signal has
+        # to fail this target like it fails the others.
+        exit(error_status())
 
     target = make_target(args.target, block, logger, target_kwargs)
     if target is None:
@@ -225,9 +277,7 @@ def main():
     except OSError:
         logger.error('cannot write to "%s"', args.output)
 
-    if "ERROR" in LoggingLevelCounterHandler.level_counter:
-        if LoggingLevelCounterHandler.level_counter["ERROR"] != 0:
-            exit(1)
+    exit(error_status())
 
 
 if __name__ == "__main__":
