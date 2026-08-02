@@ -45,6 +45,13 @@ jobs:
       - name: Install tclsh
         run: sudo apt-get install -y --no-install-recommends tcl
 
+      # The dump readers are confronted with gtkwave's own, which is the
+      # reference implementation of FST, LXT2 and VZT -- and the only
+      # thing that can vouch for the VZT fixtures, no simulator writing
+      # that format. Those tests skip themselves without the converters.
+      - name: Install the gtkwave converters
+        run: sudo apt-get install -y --no-install-recommends gtkwave
+
       - name: Run pytest
         run: uv run --group dev pytest
 

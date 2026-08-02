@@ -1,0 +1,82 @@
+#
+# This file is part of wavedisp. See the root README.md for further
+# information.
+#
+# wavedisp is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# wavedisp is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with wavedisp.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright (C) 2019 Christophe Clienti
+
+"""Confront the binary readers with gtkwave's own.
+
+The fixtures of the binary formats are what a writer produced, and a
+reader that agrees with itself proves nothing about them. Here each one
+is converted to VCD by the gtkwave helper of its format, and the names
+of the conversion are compared to what the reader returned. gtkwave is
+the reference implementation of all three formats, so a disagreement is
+a bug here -- and it is the only check the VZT fixtures can get, no
+simulator being able to write that format.
+
+The helpers are installed by the CI: a check that decides on its own
+whether it runs is no check.
+"""
+
+import shutil
+import subprocess
+import tempfile
+import unittest
+from pathlib import Path
+
+from wavedisp.dump import read_signals
+
+DATA_DIR = Path(__file__).parent / "data"
+
+# LXT has no converter of its own: gtkwave reads it, and nothing in the
+# distribution writes a VCD back out of it.
+CONVERTERS = [
+    ("dpmemrf_tb.fst", "fst2vcd"),
+    ("dpmemrf_tb_verilator.fst", "fst2vcd"),
+    ("parmem3_2_tb.fst", "fst2vcd"),
+    ("dpmemrf_tb.lxt2", "lxt2vcd"),
+    ("parmem3_2_tb.vzt", "vzt2vcd"),
+    ("parmem3_2_tb_bz2.vzt", "vzt2vcd"),
+    ("parmem3_2_tb_lzma.vzt", "vzt2vcd"),
+]
+
+
+def signal_set(filename):
+    """Return the signals of a dump, bit ranges left out."""
+
+    return {name.split(" ")[0] for name in read_signals(filename)}
+
+
+class TestAgainstGtkwave(unittest.TestCase):
+    """Compare each binary reader to the gtkwave converter of its format."""
+
+    def test_readers_agree_with_gtkwave(self):
+        """Every fixture holds the names gtkwave itself reports."""
+
+        for filename, converter in CONVERTERS:
+            with self.subTest(filename=filename, converter=converter):
+                if shutil.which(converter) is None:
+                    self.skipTest(f"{converter} not installed")
+
+                with tempfile.TemporaryDirectory() as directory:
+                    converted = Path(directory) / "converted.vcd"
+                    subprocess.run(
+                        [converter, str(DATA_DIR / filename), "-o", str(converted)],
+                        capture_output=True,
+                        check=True,
+                    )
+
+                    self.assertEqual(signal_set(DATA_DIR / filename), signal_set(converted))
