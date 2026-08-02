@@ -30,7 +30,9 @@ being read.
 import io
 import zlib
 
-from ._util import DumpError, lz4_decompress, read_cstring, read_varint
+import lz4.block
+
+from ._util import DumpError, read_cstring, read_varint
 
 # Section types, from fstapi.h.
 FST_BL_HIER = 4
@@ -118,9 +120,23 @@ def _decompress_hierarchy(stream, section_type: int, section_length: int) -> byt
     if section_type == FST_BL_HIER_LZ4DUO:
         # Compressed twice: the first length is a varint ahead of the data.
         intermediate_length, offset = read_varint(payload, 0)
-        payload = lz4_decompress(payload[offset:], intermediate_length)
+        payload = _unpack_lz4(payload[offset:], intermediate_length)
 
-    return lz4_decompress(payload, uncompressed_length)
+    return _unpack_lz4(payload, uncompressed_length)
+
+
+def _unpack_lz4(payload: bytes, uncompressed_length: int) -> bytes:
+    """Decompress an LZ4 block of an FST hierarchy section.
+
+    FST stores a bare block: no frame header, no checksum, and the size
+    of the result read from the section header rather than from the
+    stream, which is why the size has to be handed over.
+    """
+
+    try:
+        return lz4.block.decompress(payload, uncompressed_size=uncompressed_length)
+    except lz4.block.LZ4BlockError as error:
+        raise DumpError(f"fst hierarchy section does not decompress: {error}") from error
 
 
 def _parse_hierarchy(data: bytes) -> list[str]:

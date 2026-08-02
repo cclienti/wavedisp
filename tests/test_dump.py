@@ -46,8 +46,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import lz4.block
+
 from wavedisp.dump import DumpError, read_signals
-from wavedisp.dump._util import lz4_decompress
 from wavedisp.dump.signals import DumpSignals
 
 DATA_DIR = Path(__file__).parent / "data"
@@ -190,53 +191,6 @@ class TestDumpSignals(unittest.TestCase):
         self.assertNotIn("dut.clk", signals)
 
 
-def lz4_literals(data: bytes) -> bytes:
-    """Pack ``data`` into an LZ4 block made of literals only.
-
-    A block of nothing but literals is what the format allows in the
-    worst case, and it needs no compressor to produce, which is what
-    makes it usable to test the decompressor.
-    """
-
-    length = len(data)
-    token = min(length, 15)
-    block = bytearray([token << 4])
-
-    if length >= 15:
-        remaining = length - 15
-        while remaining >= 255:
-            block.append(255)
-            remaining -= 255
-        block.append(remaining)
-
-    return bytes(block) + data
-
-
-class TestLz4(unittest.TestCase):
-    """Test the LZ4 block decompressor."""
-
-    def test_literals_only(self):
-        """A block of literals, over and under the token limit."""
-
-        for data in [b"", b"short", b"x" * 300]:
-            with self.subTest(size=len(data)):
-                self.assertEqual(lz4_decompress(lz4_literals(data), len(data)), data)
-
-    def test_overlapping_match(self):
-        """A match closer than it is long repeats what it just wrote."""
-
-        # Two literals, then a match of six bytes two bytes back.
-        block = bytes([0x22, ord("a"), ord("b"), 0x02, 0x00])
-
-        self.assertEqual(lz4_decompress(block, 8), b"abababab")
-
-    def test_truncated_block(self):
-        """A block that stops early is an error, not a short result."""
-
-        with self.assertRaises(DumpError):
-            lz4_decompress(lz4_literals(b"12345"), 6)
-
-
 class TestFstSections(unittest.TestCase):
     """Test the FST section walk on files no writer here produces."""
 
@@ -262,13 +216,25 @@ class TestFstSections(unittest.TestCase):
         the writer to choose it, which no test dump reaches.
         """
 
-        once = lz4_literals(self.HIERARCHY)
-        twice = lz4_literals(once)
+        once = lz4.block.compress(self.HIERARCHY, store_size=False)
+        twice = lz4.block.compress(once, store_size=False)
         payload = len(self.HIERARCHY).to_bytes(8, "big") + bytes([len(once)]) + twice
 
         signals = read_signals(self.fst_file(7, payload))
 
         self.assertEqual(list(signals), ["tb.clk"])
+
+    def test_corrupt_hierarchy(self):
+        """A hierarchy that does not decompress is reported as a dump error.
+
+        The lz4 bindings raise an exception of their own, and letting it
+        through would make a damaged file look like a bug in the caller.
+        """
+
+        payload = (16).to_bytes(8, "big") + b"not an lz4 block"
+
+        with self.assertRaises(DumpError):
+            read_signals(self.fst_file(6, payload))
 
     def test_no_hierarchy_section(self):
         """A file whose sections hold no hierarchy is an error."""

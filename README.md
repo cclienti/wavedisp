@@ -24,7 +24,8 @@ another description — the same way the RTL it follows is written.
 pip install wavedisp
 ```
 
-Requires Python 3.10 or later, with no runtime dependencies. For a checkout:
+Requires Python 3.10 or later. The only runtime dependency is [lz4](https://pypi.org/project/lz4/), which decodes the
+hierarchy of the FST files recent writers produce. For a checkout:
 
 ```sh
 git clone https://github.com/cclienti/wavedisp.git

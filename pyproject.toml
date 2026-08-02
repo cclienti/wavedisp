@@ -12,7 +12,9 @@ authors = [
     {name = "Christophe Clienti", email = "christophe.clienti@gmail.com"},
 ]
 requires-python = ">=3.10"
-dependencies = []
+# The hierarchy of an FST is LZ4 packed by every recent writer, and
+# decoding it is the one thing the standard library cannot do.
+dependencies = ["lz4"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
