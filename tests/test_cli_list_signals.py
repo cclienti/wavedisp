@@ -22,11 +22,16 @@
 import os
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
+
+from wavedisp import cli
 
 DATA_DIR = Path(__file__).parent / "data"
 ROOT_DIR = Path(__file__).parent.parent
+WAVE_FILE = DATA_DIR / "dpmemrf_tb.wave.py"
 
 # What the fixtures hold, checked against the dumps themselves in
 # test_dump.py.
@@ -111,3 +116,60 @@ class TestListSignals(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertEqual(result.stdout, "")
         self.assertIn("cannot read the dump", result.stderr)
+
+    def test_options_of_a_generation_run_are_refused(self):
+        """Listing next to -o, -c or a description is a mistake, not a mode.
+
+        Accepting them would print the list and exit 0 having written no
+        wave file and run no check, which reads as a successful run.
+        """
+
+        dump = str(DATA_DIR / "dpmemrf_tb.fst")
+
+        for arguments in [
+            ("-l", dump, str(WAVE_FILE)),
+            ("-l", dump, "-o", os.devnull),
+            ("-l", dump, "-c", dump),
+        ]:
+            with self.subTest(arguments=arguments):
+                result = self.run_cli(*arguments)
+
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("takes no", result.stderr)
+                self.assertEqual(result.stdout, "")
+
+
+class TestExitStatus(unittest.TestCase):
+    """Test the status the entry point returns to its caller."""
+
+    def run_main(self, *arguments):
+        """Call main() in this process, as a build script would."""
+
+        with mock.patch.object(sys, "argv", ["wavedisp", *arguments]):
+            return cli.main()
+
+    def test_errors_do_not_carry_over_between_runs(self):
+        """A failed run does not fail the next one in the same process.
+
+        The error count belongs to the run, not to the module: a script
+        emitting one file per target from one description calls main()
+        several times.
+        """
+
+        with tempfile.TemporaryDirectory() as directory:
+            output = str(Path(directory) / "out.tcl")
+            failed = self.run_main(
+                str(WAVE_FILE), "-o", output, "-c", str(DATA_DIR / "dpmemrf_tb.fst"), "-a", '{"typo": true}'
+            )
+            passed = self.run_main(str(WAVE_FILE), "-o", output, "-c", str(DATA_DIR / "dpmemrf_tb.fst"))
+
+        self.assertEqual(failed, 1)
+        self.assertEqual(passed, 0)
+
+    def test_main_returns_rather_than_raises(self):
+        """A successful run gives its caller a value, not a SystemExit."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            status = self.run_main(str(WAVE_FILE), "-o", str(Path(directory) / "out.tcl"))
+
+        self.assertEqual(status, 0)

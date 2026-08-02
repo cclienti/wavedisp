@@ -27,7 +27,7 @@ only the facility name section is followed.
 
 import zlib
 
-from ._util import DumpError, read_prefixed_names
+from ._util import DumpError, decompressing, read_prefixed_names
 
 LXT_IDENTIFIER = 0x0138
 LXT_TRAILER = 0xB4
@@ -81,13 +81,15 @@ def _read_table(stream, expanded_size: int, facility_count: int) -> bytes:
         return head + stream.read(expanded_size + 2 * facility_count)
 
     decompressor = zlib.decompressobj(zlib.MAX_WBITS | 16)
-    table = bytearray(decompressor.decompress(head))
+    table = bytearray()
+    chunk = head
 
-    while not decompressor.eof:
-        chunk = stream.read(CHUNK_SIZE)
-        if not chunk:
+    while chunk:
+        with decompressing("the lxt name table"):
+            table += decompressor.decompress(chunk)
+        if decompressor.eof:
             break
-        table += decompressor.decompress(chunk)
+        chunk = stream.read(CHUNK_SIZE)
 
     return bytes(table)
 

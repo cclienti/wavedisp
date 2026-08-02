@@ -24,7 +24,7 @@ import lzma
 import zlib
 
 from ._facilities import read_facility_names
-from ._util import DumpError
+from ._util import DumpError, decompressing
 
 VZT_IDENTIFIER = 0x565A  # 'VZ'
 
@@ -97,13 +97,14 @@ def _decompress(data: bytes, uncompressed_size: int) -> bytes:
     bytes of the section, and so does this.
     """
 
-    if data.startswith(GZIP_MAGIC):
-        return zlib.decompressobj(zlib.MAX_WBITS | 16).decompress(data)
+    with decompressing("the vzt name table"):
+        if data.startswith(GZIP_MAGIC):
+            return zlib.decompressobj(zlib.MAX_WBITS | 16).decompress(data)
 
-    if data.startswith(LZMA_MAGIC):
-        return _lzma_decompress(data, uncompressed_size)
+        if data.startswith(LZMA_MAGIC):
+            return _lzma_decompress(data, uncompressed_size)
 
-    return bz2.BZ2Decompressor().decompress(data)
+        return bz2.BZ2Decompressor().decompress(data)
 
 
 def read_signals(stream) -> list[str]:

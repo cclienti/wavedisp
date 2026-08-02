@@ -26,9 +26,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from wavedisp.ast import Block
+from wavedisp.ast import Block, Disp, Hierarchy
 from wavedisp.checker import SignalChecker, signal_path
 from wavedisp.dump import read_signals
+from wavedisp.targets.gtkwave import GTKWaveTarget
 
 DATA_DIR = Path(__file__).parent / "data"
 WAVE_FILE = DATA_DIR / "dpmemrf_tb.wave.py"
@@ -57,6 +58,30 @@ class TestSignalPath(unittest.TestCase):
         """A signal declared outside any hierarchy keeps its bare name."""
 
         self.assertEqual(signal_path("", "clk"), "clk")
+
+    def test_name_carrying_a_path(self):
+        """A Disp value may carry a path, and it converts like the rest."""
+
+        self.assertEqual(signal_path("/tb/dut", "fifo_inst/write_ptr"), "tb.dut.fifo_inst.write_ptr")
+
+    def test_targets_and_checker_agree(self):
+        """The check looks a signal up under the name the targets emit.
+
+        Whichever way the description spells it, the two have to derive
+        the same path or the check validates something no viewer is
+        ever asked for.
+        """
+
+        testbench = Hierarchy("/dpmemrf_tb")
+        testbench.add(Disp("u_plain/addra"))
+        testbench.forward()
+
+        generated = GTKWaveTarget(testbench).genstr
+        checker = SignalChecker(read_signals(DATA_DIR / "dpmemrf_tb.fst"), "dpmemrf_tb.fst")
+        checker.visit(testbench)
+
+        self.assertIn("dpmemrf_tb.u_plain.addra", generated)
+        self.assertEqual(checker.missing, [])
 
 
 class TestSignalChecker(unittest.TestCase):

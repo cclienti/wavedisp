@@ -22,6 +22,7 @@
 import zlib
 
 from ._facilities import read_facility_names
+from ._util import decompressing
 
 LXT2_IDENTIFIER = 0x1380
 
@@ -29,7 +30,8 @@ LXT2_IDENTIFIER = 0x1380
 def _decompress(data: bytes, _uncompressed_size: int) -> bytes:
     """Undo the gzip stream LXT2 always uses for its name table."""
 
-    return zlib.decompressobj(zlib.MAX_WBITS | 16).decompress(data)
+    with decompressing("the lxt2 name table"):
+        return zlib.decompressobj(zlib.MAX_WBITS | 16).decompress(data)
 
 
 def read_signals(stream) -> list[str]:

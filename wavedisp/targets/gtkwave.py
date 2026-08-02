@@ -21,6 +21,7 @@
 
 import logging
 
+from ..ast import signal_path
 from ..visitor import Visitor
 from .x11colors import X11_COLORS
 
@@ -199,8 +200,7 @@ class GTKWaveTarget(Visitor):
         """
 
         for value in tree.value:
-            hierarchy = tree.hierarchy.split("/")
-            fullname = ".".join(hierarchy[1:]) + "." + value
+            fullname = signal_path(tree.hierarchy, value)
 
             # Properties apply to whatever this add produced -- nothing at
             # all if the signal is absent from the dump, which is why the

@@ -88,19 +88,27 @@ def read_signals(filename) -> DumpSignals:
         return _read_stream(filename)
 
     with open(filename, "rb") as stream:
-        if stream.read(2) == GZIP_MAGIC:
-            with gzip.open(filename, "rb") as unzipped:
-                return _read_stream(unzipped)
-
-        stream.seek(0)
         return _read_stream(stream)
 
 
-def _read_stream(stream) -> DumpSignals:
-    """Read a dump from an already opened binary stream."""
+def _read_stream(stream, unwrapped: bool = False) -> DumpSignals:
+    """Read a dump from an already opened binary stream.
+
+    The gzip test lives here rather than beside the ``open`` above, so
+    that a caller handing over a stream -- a dump pulled from an archive
+    and never landed on disk, which is the reason to accept one -- gets
+    the same unwrapping as a caller handing over a path.
+
+    :param stream: binary stream positioned at the start of the dump.
+    :param bool unwrapped: True once a wrapper has been undone, which
+        stops a file gzipped twice from recursing further.
+    """
 
     magic = stream.read(9)
     stream.seek(0)
+
+    if not unwrapped and magic.startswith(GZIP_MAGIC):
+        return _read_stream(gzip.GzipFile(fileobj=stream), unwrapped=True)
 
     module, format_name = _reader(magic)
 

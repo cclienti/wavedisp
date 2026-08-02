@@ -29,6 +29,28 @@ import re
 LOGGER = logging.getLogger("wavegen")
 
 
+def signal_path(hierarchy: str, name: str) -> str:
+    """Return the path a viewer is asked for.
+
+    The AST separates levels with slashes and most viewers want dots.
+    The conversion applies to the signal name as well as to the
+    hierarchy of its node: a Disp value is allowed to carry a path of
+    its own -- ``Disp('reset_inst/pcie_rstn')`` -- and converting only
+    half of it names a signal no dump holds.
+
+    Empty levels are dropped, so a signal declared outside any Hierarchy
+    keeps its bare name instead of gaining a leading separator.
+
+    :param str hierarchy: hierarchy path of the node, slash separated.
+    :param str name: signal name, which may carry a path of its own.
+    :return: the dot separated path of the signal.
+    """
+
+    levels = [level for level in f"{hierarchy}/{name}".split("/") if level]
+
+    return ".".join(levels)
+
+
 class ASTBase:
     """Base class to describe a node or a leaf.
 

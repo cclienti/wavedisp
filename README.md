@@ -429,7 +429,8 @@ wavedisp -l tb.fst | grep fifo_inst
 wavedisp -l tb.fst | wc -l
 ```
 
-This mode takes no description and writes no save file, so `input` and `-o` are left out.
+This mode takes no description and writes no save file: `input`, `-o` and `-c` are not left out but refused, a run
+that printed a list and quietly wrote nothing else being indistinguishable from a successful generation.
 
 The `dot` target renders the tree wavedisp built, which is the quickest way to see what a parameterised description
 actually produced:
