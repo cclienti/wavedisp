@@ -79,13 +79,22 @@ def read_signals(stream) -> list[str]:
     tokens = _tokens(stream)
     scopes: list[str] = []
     names: list[str] = []
+    unnamed_scope_index = 0
     declared = False
 
     for token in tokens:
         if token == "$scope":
             arguments = _command_arguments(tokens)
             # $scope <type> <name>, and the name is optional in the wild.
-            scopes.append(arguments[1] if len(arguments) > 1 else "")
+            # An empty level would join into a path with two dots in a
+            # row; FST names such a scope, and the two readers have to
+            # agree or a description checked against one dump of a run
+            # fails against another dump of the same run.
+            if len(arguments) > 1:
+                scopes.append(arguments[1])
+            else:
+                scopes.append(f"$unnamed_scope_{unnamed_scope_index}")
+                unnamed_scope_index += 1
 
         elif token == "$upscope":
             _command_arguments(tokens)

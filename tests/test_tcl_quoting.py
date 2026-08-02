@@ -131,14 +131,14 @@ namespace eval gtkwave {
             grp.add(Disp("sig"))
             self.assertEqual(
                 self.run_script(generate(blk)),
-                [["comment", name], ["signal", ".sig"], ["group", name]],
+                [["comment", name], ["signal", "sig"], ["group", name]],
                 repr(name),
             )
 
     def test_a_hostile_signal_path_is_added_as_one_signal(self):
         blk = Block()
         blk.add(Disp("sig{0}"))
-        self.assertEqual(self.run_script(generate(blk)), [["signal", ".sig{0}"]])
+        self.assertEqual(self.run_script(generate(blk)), [["signal", "sig{0}"]])
 
 
 if __name__ == "__main__":

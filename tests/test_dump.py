@@ -149,6 +149,38 @@ class TestDumpReaders(unittest.TestCase):
 
             self.assertEqual({name.split(" ")[0] for name in read_signals(zipped)}, signal_set("dpmemrf_tb.vcd"))
 
+    def test_gzipped_stream(self):
+        """A gzipped dump handed over as a stream is unwrapped as well.
+
+        Reading from a stream is what a caller does with a dump pulled
+        out of an archive and never landed on disk, which is precisely
+        the case where it arrives still compressed.
+        """
+
+        zipped = io.BytesIO(gzip.compress((DATA_DIR / "dpmemrf_tb.vcd").read_bytes()))
+
+        self.assertEqual({name.split(" ")[0] for name in read_signals(zipped)}, signal_set("dpmemrf_tb.vcd"))
+
+    def test_unnamed_scope(self):
+        """An unnamed scope is named, and named as the FST reader does.
+
+        A path with two dots in a row cannot be pasted into a Disp, and
+        a description checked against the VCD of a run has to pass
+        against the FST of the same run.
+        """
+
+        vcd = io.BytesIO(
+            b"$timescale 1ns $end\n"
+            b"$scope module tb $end\n"
+            b"$scope module $end\n"
+            b"$var wire 1 ! sig $end\n"
+            b"$upscope $end\n"
+            b"$upscope $end\n"
+            b"$enddefinitions $end\n"
+        )
+
+        self.assertEqual(list(read_signals(vcd)), ["tb.$unnamed_scope_0.sig"])
+
     def test_unreadable_file(self):
         """A file that is no dump at all is reported as such."""
 
@@ -181,6 +213,28 @@ class TestDumpSignals(unittest.TestCase):
         self.assertIn("tb.dut.mem[3]", signals)
         self.assertNotIn("tb.dut.mem[9]", signals)
 
+    def test_array_element_without_a_range(self):
+        """The same, when the writer gives the element no range at all.
+
+        A one-bit array element is dumped as `mem[3]` and nothing else,
+        so the last bracket is the index rather than the range. Telling
+        the two apart by the colon and not by the position is what keeps
+        `mem[9]` from matching here.
+        """
+
+        signals = DumpSignals(["tb.dut.mem[3]"])
+
+        self.assertIn("tb.dut.mem[3]", signals)
+        self.assertNotIn("tb.dut.mem[9]", signals)
+        self.assertNotIn("tb.dut.mem[0]", signals)
+
+    def test_one_bit_of_a_bus(self):
+        """A description may name a bit of a bus the dump holds whole."""
+
+        signals = DumpSignals(["tb.dut.doa [31:0]"])
+
+        self.assertIn("tb.dut.doa[3]", signals)
+
     def test_scope_must_match(self):
         """Leniency stops at bit ranges: a wrong path is a wrong path."""
 
@@ -189,6 +243,38 @@ class TestDumpSignals(unittest.TestCase):
         self.assertNotIn("tb.clk", signals)
         self.assertNotIn("tb.dut.clock", signals)
         self.assertNotIn("dut.clk", signals)
+
+
+class TestDamagedDumps(unittest.TestCase):
+    """Test what a dump left half-written comes back as."""
+
+    # Where each format keeps the compressed section the readers reach
+    # for, recognised by its marker rather than by an offset.
+    CORRUPTED = [
+        ("dpmemrf_tb.fst", b"\x1f\x8b"),
+        ("dpmemrf_tb.lxt", b"\x1f\x8b"),
+        ("dpmemrf_tb.lxt2", b"\x1f\x8b"),
+        ("parmem3_2_tb.vzt", b"\x1f\x8b"),
+        ("parmem3_2_tb_bz2.vzt", b"BZh"),
+        ("parmem3_2_tb_lzma.vzt", b"z7"),
+    ]
+
+    def test_a_damaged_section_is_a_dump_error(self):
+        """Not a traceback from a compression library never imported.
+
+        A simulation killed mid-flush leaves exactly this, and every
+        format reaches its declarations through a different compressor:
+        zlib, bzip2 and lzma each raise an exception of their own.
+        """
+
+        for filename, marker in self.CORRUPTED:
+            with self.subTest(filename=filename):
+                data = bytearray((DATA_DIR / filename).read_bytes())
+                start = data.find(marker) + len(marker)
+                data[start : start + 32] = b"\xff" * 32
+
+                with self.assertRaises(DumpError):
+                    read_signals(io.BytesIO(bytes(data)))
 
 
 class TestFstSections(unittest.TestCase):
@@ -208,6 +294,20 @@ class TestFstSections(unittest.TestCase):
         header = self.section(0, bytes(321))
 
         return io.BytesIO(header + self.section(section_type, payload))
+
+    def test_compressed_wrapper(self):
+        """A whole file wrapped in gzip, as FST_BL_ZWRAPPER holds it.
+
+        No writer here produces one, so the fixture is a real dump put
+        inside the wrapper. What the reader must not do is inflate the
+        whole thing to reach a hierarchy sitting near its start.
+        """
+
+        dump = (DATA_DIR / "dpmemrf_tb.fst").read_bytes()
+        payload = len(dump).to_bytes(8, "big") + gzip.compress(dump)
+        wrapped = io.BytesIO(self.section(254, payload))
+
+        self.assertEqual({name.split(" ")[0] for name in read_signals(wrapped)}, signal_set("dpmemrf_tb.fst"))
 
     def test_hierarchy_packed_twice(self):
         """The LZ4DUO variant, used for hierarchies over four megabytes.

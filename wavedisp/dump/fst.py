@@ -27,12 +27,12 @@ so the sections carrying the actual waveform are skipped over without
 being read.
 """
 
-import io
+import gzip
 import zlib
 
 import lz4.block
 
-from ._util import DumpError, read_cstring, read_varint
+from ._util import DumpError, decompressing, read_cstring, read_varint
 
 # Section types, from fstapi.h.
 FST_BL_HIER = 4
@@ -78,7 +78,8 @@ def _read_hierarchy_section(stream, depth: int = 0) -> bytes:
         if section_type == FST_BL_ZWRAPPER:
             if depth >= MAX_ZWRAPPER_DEPTH:
                 raise DumpError("fst compressed wrappers nested too deeply")
-            return _read_hierarchy_section(_unwrap(stream, section_length), depth + 1)
+            with decompressing("the fst compressed wrapper"):
+                return _read_hierarchy_section(_unwrap(stream), depth + 1)
 
         if section_type in (FST_BL_HIER, FST_BL_HIER_LZ4, FST_BL_HIER_LZ4DUO):
             return _decompress_hierarchy(stream, section_type, section_length)
@@ -89,19 +90,21 @@ def _read_hierarchy_section(stream, depth: int = 0) -> bytes:
         position += 1 + section_length
 
 
-def _unwrap(stream, section_length: int) -> io.BytesIO:
-    """Undo the zlib wrapper a writer may put over the whole file."""
+def _unwrap(stream):
+    """Undo the compressed wrapper a writer may put over the whole file.
 
-    uncompressed_length = int.from_bytes(stream.read(8), "big")
-    # A zero length marks a file the writer never closed; the payload
-    # then runs to the end of the file.
-    payload = stream.read(section_length - 16 if section_length else -1)
+    Returned as a stream rather than as bytes: the wrapper covers the
+    entire dump, value changes included, and inflating it whole to reach
+    a hierarchy section that sits near its start would give up the one
+    property this package is built on. GzipFile decompresses on demand
+    and seeks the way the section walk needs.
+    """
 
-    data = zlib.decompressobj(zlib.MAX_WBITS | 16).decompress(payload)
-    if uncompressed_length and len(data) != uncompressed_length:
-        raise DumpError("fst compressed wrapper does not hold the announced number of bytes")
+    # The announced length of the uncompressed file, of no use to a walk
+    # that stops at the hierarchy.
+    stream.read(8)
 
-    return io.BytesIO(data)
+    return gzip.GzipFile(fileobj=stream)
 
 
 def _decompress_hierarchy(stream, section_type: int, section_length: int) -> bytes:
@@ -112,7 +115,8 @@ def _decompress_hierarchy(stream, section_type: int, section_length: int) -> byt
     payload = stream.read(section_length - 16)
 
     if section_type == FST_BL_HIER:
-        data = zlib.decompressobj(zlib.MAX_WBITS | 16).decompress(payload)
+        with decompressing("the fst hierarchy section"):
+            data = zlib.decompressobj(zlib.MAX_WBITS | 16).decompress(payload)
         if len(data) != uncompressed_length:
             raise DumpError("fst hierarchy section does not hold the announced number of bytes")
         return data

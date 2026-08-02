@@ -19,6 +19,10 @@
 
 """Byte-level helpers shared by the dump readers."""
 
+import contextlib
+import lzma
+import zlib
+
 
 class DumpError(Exception):
     """Raised when a dump file cannot be read.
@@ -27,6 +31,31 @@ class DumpError(Exception):
     means the header itself is unusable: wrong magic, truncated section
     or a compression the standard library cannot undo.
     """
+
+
+# What the decompressors of the standard library raise on damaged input:
+# zlib and lzma have exceptions of their own, bz2 reports through OSError
+# and ValueError.
+DECOMPRESSION_ERRORS = (zlib.error, lzma.LZMAError, OSError, ValueError, EOFError)
+
+
+@contextlib.contextmanager
+def decompressing(what: str):
+    """Turn the decompressor failures of a section into a DumpError.
+
+    A dump left half-written by a killed simulation is an ordinary
+    thing to hand to these readers, and it has to come back as a dump
+    problem rather than as a traceback from a compression library the
+    caller never imported. The block guarded has to hold the
+    decompression and nothing else, OSError being in the list.
+
+    :param str what: the section, for the message.
+    """
+
+    try:
+        yield
+    except DECOMPRESSION_ERRORS as error:
+        raise DumpError(f"{what} does not decompress: {error}") from error
 
 
 def read_cstring(buf: bytes, pos: int) -> tuple[str, int]:

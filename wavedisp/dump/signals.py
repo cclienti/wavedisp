@@ -22,6 +22,8 @@
 import re
 
 BRACKET_SPACING = re.compile(r"\s*\[")
+BIT_RANGE = re.compile(r"\[[^\[\]]*:[^\[\]]*\]$")
+BRACKETED = re.compile(r"\[[^\[\]]*\]$")
 
 
 def canonical(name: str) -> str:
@@ -35,20 +37,30 @@ def canonical(name: str) -> str:
 
 
 def without_range(name: str) -> str:
-    """Return ``name`` without its trailing bracketed part, if any.
+    """Return ``name`` without its trailing bit range, if it has one.
 
-    Whether a name carries its bit range depends on the format and on
-    the writer, so a comparison has to be able to drop it. Only the last
-    bracket goes: in ``mem[3][7:0]`` the range is dropped but the array
-    index, which selects a different signal, is kept.
+    Whether a name carries its range depends on the format and on the
+    writer, so a comparison has to be able to drop it. A range is
+    recognised by its colon, and only by that: ``mem[3]`` selects one
+    element of an array and is part of the name, where ``doa[31:0]``
+    says how wide ``doa`` is. Dropping the two alike would make
+    ``mem[9]`` match a dump that only holds ``mem[3]``, which is the
+    silent pass this check exists to prevent.
     """
 
-    if name.endswith("]"):
-        start = name.rfind("[")
-        if start > 0:
-            return name[:start]
+    return BIT_RANGE.sub("", name)
 
-    return name
+
+def without_index(name: str) -> str:
+    """Return ``name`` without its trailing bracketed part, if any.
+
+    Applied to what a wave file asks for, never to what a dump holds:
+    a description may name one bit of a bus, ``Disp('doa[3]')``, or a
+    one-bit signal the way a viewer displays it, ``clk[0]``, while the
+    dump holds ``doa [31:0]`` and ``clk``.
+    """
+
+    return BRACKETED.sub("", name)
 
 
 class DumpSignals:
@@ -59,6 +71,12 @@ class DumpSignals:
     ``dut.doa[31:0]`` of the dump, and the other way round. It is not
     lenient about anything else -- a wrong scope or a misspelled name
     has to be reported, that being the whole point of the check.
+
+    The leniency is one-way where it has to be. What a dump holds is
+    indexed with its ranges dropped but its array indices kept, so
+    ``mem[9]`` cannot match a dump that holds ``mem[3]``; what a wave
+    file asks for may in addition drop a trailing index, so naming one
+    bit of a bus still matches the bus the dump declares.
     """
 
     def __init__(self, names, format_name: str = ""):
@@ -74,11 +92,12 @@ class DumpSignals:
 
     def __contains__(self, path: str) -> bool:
         path = canonical(path)
-        if path in self._exact or path in self._bare:
-            return True
 
-        bare = without_range(path)
-        return bare != path and (bare in self._exact or bare in self._bare)
+        for candidate in (path, without_range(path), without_index(without_range(path))):
+            if candidate in self._exact or candidate in self._bare:
+                return True
+
+        return False
 
     def __len__(self) -> int:
         return len(self.names)

@@ -37,6 +37,7 @@ import logging
 import math
 import re
 
+from ..ast import signal_path
 from ..visitor import Visitor
 from . import TargetOptionError
 from .x11colors import X11_COLORS
@@ -535,11 +536,7 @@ class SurferTarget(Visitor):
         """
 
         for value in tree.value:
-            # Surfer separates scopes with dots. The separator is applied
-            # to the signal name too, since a Disp value is allowed to
-            # carry a path of its own -- Disp('reset_inst/pcie_rstn').
-            path = tree.hierarchy.split("/")[1:] + value.split("/")
-            fullname = ".".join(path)
+            fullname = signal_path(tree.hierarchy, value)
 
             # Dropped rather than substituted: an altered path names a
             # signal that is not in the dump, and Surfer would add no row

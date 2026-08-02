@@ -23,6 +23,7 @@ import argparse
 import inspect
 import json
 import logging
+import sys
 
 from wavedisp.ast import Block
 from wavedisp.checker import SignalChecker
@@ -134,9 +135,18 @@ def make_target(name, tree, logger, kwargs):
 
 
 class LoggingLevelCounterHandler(logging.Handler):
-    """Count the occurence of each level call."""
+    """Count the occurence of each level call.
 
-    level_counter = {}
+    The counts belong to the instance and not to the class: the exit
+    status is read from them, and a caller driving several runs in the
+    same process -- a build script emitting one file per target from one
+    description -- would otherwise see the errors of the first run fail
+    the second.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.level_counter = {}
 
     def emit(self, record):
         name = record.levelname
@@ -146,11 +156,10 @@ class LoggingLevelCounterHandler(logging.Handler):
 
         self.level_counter[name] += 1
 
+    def error_status(self) -> int:
+        """Return the exit status the errors logged so far call for."""
 
-def error_status() -> int:
-    """Return the exit status the errors logged so far call for."""
-
-    return 1 if LoggingLevelCounterHandler.level_counter.get("ERROR") else 0
+        return 1 if self.level_counter.get("ERROR") else 0
 
 
 def check_signals(block, filename, logger):
@@ -214,8 +223,14 @@ def print_dump_signals(filename, logger) -> int:
     return 0
 
 
-def main():
-    """Command line interface entry point."""
+def main() -> int:
+    """Command line interface entry point.
+
+    Returns the exit status rather than raising SystemExit, so that a
+    build script driving several runs in one process gets a value it can
+    read instead of an exception it has to catch. The console script
+    installed by the packaging exits on it.
+    """
 
     description = "Wavedisp, the waveforms file generator"
     parser = argparse.ArgumentParser(description=description, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -272,14 +287,44 @@ def main():
     logging.basicConfig(
         format="[%(asctime)s][%(process)d][%(name)s][%(levelname)s] %(message)s",
         datefmt="%d-%b-%y %H:%M:%S",
-        handlers=[logging.StreamHandler(), LoggingLevelCounterHandler()],
+        handlers=[logging.StreamHandler()],
         level=log_level,
     )
+
+    # Attached by hand rather than through basicConfig, which does
+    # nothing at all once the root logger has a handler -- on a second
+    # call in the same process, or under a test runner that configures
+    # logging itself. The counter decides the exit status, so it cannot
+    # be the one thing that silently fails to be installed. Removed
+    # again on the way out, for the same reason it is per run.
+    counter = LoggingLevelCounterHandler()
+    logging.getLogger().addHandler(counter)
+    try:
+        return _run(args, parser, counter)
+    finally:
+        logging.getLogger().removeHandler(counter)
+
+
+def _run(args, parser, counter) -> int:
+    """Do what the command line asked for, and return its exit status."""
 
     logger = logging.getLogger("wavegen:cli")
 
     if args.list_signals:
-        exit(print_dump_signals(args.list_signals, logger))
+        # Refused rather than ignored: -l next to the options of a
+        # generation run means one of the two was not what the user
+        # meant, and a run that prints a list and silently writes no
+        # wave file looks like a success.
+        generation_options = (
+            ("an input file", args.input),
+            ("-o/--output", args.output),
+            ("-c/--check", args.check),
+        )
+        unusable = [option for option, value in generation_options if value]
+        if unusable:
+            parser.error(f"-l/--list-signals reads a dump and writes nothing, so it takes no {', no '.join(unusable)}")
+
+        return print_dump_signals(args.list_signals, logger)
 
     if args.input is None:
         parser.error("an input file is required, unless -l/--list-signals is given")
@@ -291,7 +336,7 @@ def main():
     kwargs = decode_kwargs(args.kwargs, "-a/--kwargs", logger)
     target_kwargs = decode_kwargs(args.target_kwargs, "-T/--target-kwargs", logger)
     if kwargs is None or target_kwargs is None:
-        exit(1)
+        return 1
 
     kwargs["__generator"] = args.generator
 
@@ -307,17 +352,17 @@ def main():
         # an option -- but it still has to refuse one rather than write
         # the file as if it had been applied.
         if not check_target_kwargs("dot", set(), target_kwargs, logger):
-            exit(1)
+            return 1
         fmod = open(args.output, "w")
         fmod.write(str(block.children[0]))
         fmod.close()
-        # Not a plain exit(0): a --check that found a missing signal has
-        # to fail this target like it fails the others.
-        exit(error_status())
+        # Not a plain 0: a --check that found a missing signal has to
+        # fail this target like it fails the others.
+        return counter.error_status()
 
     target = make_target(args.target, block, logger, target_kwargs)
     if target is None:
-        exit(1)
+        return 1
 
     try:
         fmod = open(args.output, "w")
@@ -326,8 +371,8 @@ def main():
     except OSError:
         logger.error('cannot write to "%s"', args.output)
 
-    exit(error_status())
+    return counter.error_status()
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

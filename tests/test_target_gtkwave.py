@@ -34,7 +34,7 @@ gtkwave::/Edit/Insert_Comment {The divider}
 
 set wd_start_0 [gtkwave::getTotalNumTraces]
 set wd_sig [gtkwave::getTotalNumTraces]
-gtkwave::addSignalsFromList [list {tb.top.reset_inst/pcie_rstn}]
+gtkwave::addSignalsFromList [list {tb.top.reset_inst.pcie_rstn}]
 gtkwave::/Edit/UnHighlight_All
 for {set wd_i $wd_sig} {$wd_i < [gtkwave::getTotalNumTraces]} {incr wd_i} {
     gtkwave::setTraceHighlightFromIndex $wd_i 1
@@ -48,7 +48,7 @@ for {set wd_i $wd_sig} {$wd_i < [gtkwave::getTotalNumTraces]} {incr wd_i} {
 gtkwave::/Edit/Color_Format/Red
 gtkwave::/Edit/UnHighlight_All
 set wd_sig [gtkwave::getTotalNumTraces]
-gtkwave::addSignalsFromList [list {tb.top.reset_inst/ethernet_reset}]
+gtkwave::addSignalsFromList [list {tb.top.reset_inst.ethernet_reset}]
 gtkwave::/Edit/UnHighlight_All
 for {set wd_i $wd_sig} {$wd_i < [gtkwave::getTotalNumTraces]} {incr wd_i} {
     gtkwave::setTraceHighlightFromIndex $wd_i 1

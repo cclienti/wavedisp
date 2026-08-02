@@ -21,26 +21,10 @@
 
 import logging
 
+from .ast import signal_path
 from .visitor import Visitor
 
 LOGGER = logging.getLogger("wavegen")
-
-
-def signal_path(hierarchy: str, name: str) -> str:
-    """Return the dotted path a viewer is asked for.
-
-    The AST separates hierarchy levels with slashes and the viewers all
-    want dots, so the check has to compare what the targets emit, not
-    what the wave file was written with.
-
-    :param str hierarchy: hierarchy path of the node, slash separated.
-    :param str name: signal name.
-    :return: the dot separated path.
-    """
-
-    levels = [level for level in hierarchy.split("/") if level]
-
-    return ".".join([*levels, name])
 
 
 class SignalChecker(Visitor):
