@@ -3,7 +3,8 @@
 Describe a waveform layout once, in Python, and generate the save file every viewer wants.
 
 A testbench worth debugging twice deserves a signal list worth keeping. Every viewer stores one, but each in its own
-format — GTKWave's TCL, Modelsim's `do` script, Surfer's command file — none of which is pleasant to write by hand, all
+format — [GTKWave](https://github.com/gtkwave/gtkwave)'s TCL, [Modelsim](https://eda.sw.siemens.com/en-US/ic/questa/simulation/advanced-simulator/)'s `do` script,
+[Surfer](https://gitlab.com/surfer-project/surfer)'s command file — none of which is pleasant to write by hand, all
 of which drift the moment a port is renamed. Wavedisp keeps the description in one Python file next to the RTL, under
 version control, and emits the rest:
 
@@ -269,11 +270,11 @@ half-correct file behind.
 
 | Viewer | `-t` | Output | Load it with |
 | --- | --- | --- | --- |
-| GTKWave | `gtkwave` | TCL script | `gtkwave -S layout.gtkwave.tcl dump.vcd` |
-| Modelsim / Questa | `modelsim` | TCL script | `vsim -do 'do layout.modelsim.tcl; run -all' tb` |
-| Aldec Riviera-PRO | `rivierapro` | TCL script | `vsim -do 'do layout.rivierapro.tcl; run -all' tb` |
-| Surfer | `surfer` | `.sucl` command file | `surfer dump.vcd --command-file layout.sucl` |
-| Graphviz | `dot` | `.dot` graph | `xdot layout.dot` — renders the tree, for debugging a description |
+| [GTKWave](https://github.com/gtkwave/gtkwave) | `gtkwave` | TCL script | `gtkwave -S layout.gtkwave.tcl dump.vcd` |
+| [Modelsim / Questa](https://eda.sw.siemens.com/en-US/ic/questa/simulation/advanced-simulator/) | `modelsim` | TCL script | `vsim -do 'do layout.modelsim.tcl; run -all' tb` |
+| [Aldec Riviera-PRO](https://www.aldec.com/en/products/functional_verification/riviera-pro) | `rivierapro` | TCL script | `vsim -do 'do layout.rivierapro.tcl; run -all' tb` |
+| [Surfer](https://gitlab.com/surfer-project/surfer) | `surfer` | `.sucl` command file | `surfer dump.vcd --command-file layout.sucl` |
+| [Graphviz](https://graphviz.org/) | `dot` | `.dot` graph | `xdot layout.dot` — renders the tree, for debugging a description |
 
 What each one honours:
 
@@ -295,12 +296,13 @@ Both take an exact RGB colour and a pixel `height`.
 The Riviera-PRO radix mapping looks wrong and predates the current maintainers of this file: a radix is emitted as
 `add wave -radix -hex`, combining the long option with the shorthand value, and `symbolic` maps to nothing at all,
 leaving a `-radix` with no value after it. The behaviour is pinned by the target's reference test, so it has been this
-way for a long time; it has not been re-checked against a real Riviera-PRO installation. If you use that target, check
-what it emits before trusting the `radix` property.
+way for a long time; it has not been re-checked against a real Riviera-PRO installation, and cannot be — see
+[Contributing](#contributing). If you use that target, check what it emits before trusting the `radix` property.
 
 ### Surfer
 
-Surfer has no scripting language: a command file is a flat list of the commands its prompt accepts, and each one acts
+Surfer has no scripting language: a command file is a flat list of the [commands its prompt
+accepts](https://docs.surfer-project.org/book/commands/index.html), and each one acts
 on the row Surfer has *focused*. The target therefore tracks every row index itself and emits the focus commands to
 match, because a command file cannot read anything back. Three consequences are worth knowing.
 
@@ -400,9 +402,18 @@ A new target is a `Visitor` subclass in `wavedisp/targets/`, implementing `proce
 `wavedisp/cli.py`. Constructor keyword arguments become `-T` options automatically, checked against the target's
 signature.
 
+## Contributing
+
+Pull requests are welcome, and there is one area where they are needed rather than merely welcome: **the Modelsim and
+Riviera-PRO targets can no longer be tested by the maintainer**, who no longer has access to either tool. They are
+still generated and still covered by their reference tests, but nobody here can load their output into the simulator
+it was written for. If you use one of them, a report that it works — or a patch when it does not — is worth more than
+it looks. The `radix` mapping in the Riviera-PRO target described [above](#modelsim-and-riviera-pro) is exactly the
+kind of thing that has gone unnoticed as a result.
+
+The GTKWave and Surfer targets are checked against the real viewers.
+
 ## License
 
 Wavedisp is distributed under the GPLv3, whose complete text can be found
 [here](http://www.gnu.org/licenses/gpl-3.0.html).
-
-Contributions are welcome. An example of use is available [here](https://wavecruncher.net/wavedisp).
