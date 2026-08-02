@@ -1,0 +1,267 @@
+$date
+	Sun Aug  2 15:19:19 2026
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	100ps
+$end
+$scope module dpmemrf_tb $end
+$var wire 32 ! dob_r [31:0] $end
+$var wire 32 " dob_e [31:0] $end
+$var wire 32 # dob [31:0] $end
+$var wire 32 $ doa_r [31:0] $end
+$var wire 32 % doa_e [31:0] $end
+$var wire 32 & doa [31:0] $end
+$var parameter 32 ' DEPTH $end
+$var parameter 32 ( NB $end
+$var parameter 32 ) WIDTH $end
+$var parameter 38 * WORDS $end
+$var reg 6 + addra [5:0] $end
+$var reg 6 , addra_e [5:0] $end
+$var reg 6 - addra_r [5:0] $end
+$var reg 6 . addrb [5:0] $end
+$var reg 6 / addrb_e [5:0] $end
+$var reg 6 0 addrb_r [5:0] $end
+$var reg 1 1 clka $end
+$var reg 1 2 clkb $end
+$var reg 32 3 dia [31:0] $end
+$var reg 32 4 dia_e [31:0] $end
+$var reg 32 5 dia_r [31:0] $end
+$var reg 32 6 dib [31:0] $end
+$var reg 32 7 dib_e [31:0] $end
+$var reg 32 8 dib_r [31:0] $end
+$var reg 1 9 ena $end
+$var reg 1 : ena_e $end
+$var reg 1 ; ena_r $end
+$var reg 1 < enb $end
+$var reg 1 = enb_e $end
+$var reg 1 > enb_r $end
+$var reg 1 ? wea $end
+$var reg 4 @ wea_e [3:0] $end
+$var reg 1 A wea_r $end
+$var reg 1 B web $end
+$var reg 4 C web_e [3:0] $end
+$var reg 1 D web_r $end
+$var integer 32 E errors [31:0] $end
+$scope function pattern $end
+$upscope $end
+$scope function pattern_b $end
+$upscope $end
+$scope module u_be $end
+$var wire 6 F addra [5:0] $end
+$var wire 6 G addrb [5:0] $end
+$var wire 1 1 clka $end
+$var wire 1 2 clkb $end
+$var wire 32 H dia [31:0] $end
+$var wire 32 I dib [31:0] $end
+$var wire 1 : ena $end
+$var wire 1 = enb $end
+$var wire 4 J wea [3:0] $end
+$var wire 4 K web [3:0] $end
+$var parameter 32 L BYTE_WE $end
+$var parameter 32 M CHUNK $end
+$var parameter 32 N DEPTH $end
+$var parameter 32 O NBE $end
+$var parameter 32 P OUTREGA $end
+$var parameter 32 Q OUTREGB $end
+$var parameter 32 R WIDTH $end
+$var reg 32 S doa [31:0] $end
+$var reg 32 T doa_reg [31:0] $end
+$var reg 32 U dob [31:0] $end
+$var reg 32 V dob_reg [31:0] $end
+$var integer 32 W ia [31:0] $end
+$var integer 32 X ib [31:0] $end
+$scope begin genblk1 $end
+$upscope $end
+$scope begin genblk2 $end
+$upscope $end
+$upscope $end
+$scope module u_plain $end
+$var wire 6 Y addra [5:0] $end
+$var wire 6 Z addrb [5:0] $end
+$var wire 1 1 clka $end
+$var wire 1 2 clkb $end
+$var wire 32 [ dia [31:0] $end
+$var wire 32 \ dib [31:0] $end
+$var wire 1 9 ena $end
+$var wire 1 < enb $end
+$var wire 1 ? wea $end
+$var wire 1 B web $end
+$var parameter 32 ] BYTE_WE $end
+$var parameter 32 ^ CHUNK $end
+$var parameter 32 _ DEPTH $end
+$var parameter 32 ` NBE $end
+$var parameter 32 a OUTREGA $end
+$var parameter 32 b OUTREGB $end
+$var parameter 32 c WIDTH $end
+$var reg 32 d doa [31:0] $end
+$var reg 32 e doa_reg [31:0] $end
+$var reg 32 f dob [31:0] $end
+$var reg 32 g dob_reg [31:0] $end
+$var integer 32 h ia [31:0] $end
+$var integer 32 i ib [31:0] $end
+$scope begin genblk1 $end
+$upscope $end
+$scope begin genblk2 $end
+$upscope $end
+$upscope $end
+$scope module u_reg $end
+$var wire 6 j addra [5:0] $end
+$var wire 6 k addrb [5:0] $end
+$var wire 1 1 clka $end
+$var wire 1 2 clkb $end
+$var wire 32 l dia [31:0] $end
+$var wire 32 m dib [31:0] $end
+$var wire 1 ; ena $end
+$var wire 1 > enb $end
+$var wire 1 A wea $end
+$var wire 1 D web $end
+$var parameter 32 n BYTE_WE $end
+$var parameter 32 o CHUNK $end
+$var parameter 32 p DEPTH $end
+$var parameter 32 q NBE $end
+$var parameter 32 r OUTREGA $end
+$var parameter 32 s OUTREGB $end
+$var parameter 32 t WIDTH $end
+$var reg 32 u doa [31:0] $end
+$var reg 32 v doa_reg [31:0] $end
+$var reg 32 w dob [31:0] $end
+$var reg 32 x dob_reg [31:0] $end
+$var integer 32 y ia [31:0] $end
+$var integer 32 z ib [31:0] $end
+$scope begin genblk1 $end
+$upscope $end
+$scope begin genblk2 $end
+$upscope $end
+$upscope $end
+$scope begin $unm_blk_5 $end
+$var reg 32 { held [31:0] $end
+$var reg 32 | seed [31:0] $end
+$var integer 32 } a [31:0] $end
+$upscope $end
+$scope task a_read_check $end
+$upscope $end
+$scope task a_write $end
+$upscope $end
+$scope task check $end
+$upscope $end
+$scope task e_read_check $end
+$upscope $end
+$scope task e_write $end
+$upscope $end
+$scope task idle_a $end
+$upscope $end
+$scope task idle_b $end
+$upscope $end
+$scope task idle_e $end
+$upscope $end
+$scope task idle_r $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+b100000 t
+b1 s
+b1 r
+b1 q
+b110 p
+b100000 o
+b0 n
+b100000 c
+b0 b
+b0 a
+b1 `
+b110 _
+b100000 ^
+b0 ]
+b100000 R
+b0 Q
+b0 P
+b100 O
+b110 N
+b1000 M
+b1 L
+b1000000 *
+b100000 )
+b100 (
+b110 '
+$end
+#0
+$dumpvars
+bx }
+bx |
+bx {
+bx z
+bx y
+bx x
+bx w
+bx v
+bx u
+b0 m
+b0 l
+b0 k
+b0 j
+bx i
+bx h
+bx g
+bx f
+bx e
+bx d
+b0 \
+b0 [
+b0 Z
+b0 Y
+bx X
+bx W
+bx V
+bx U
+bx T
+bx S
+b0 K
+b0 J
+b0 I
+b0 H
+b0 G
+b0 F
+b0 E
+0D
+b0 C
+0B
+0A
+b0 @
+0?
+0>
+0=
+0<
+0;
+0:
+09
+b0 8
+b0 7
+b0 6
+b0 5
+b0 4
+b0 3
+02
+01
+b0 0
+b0 /
+b0 .
+b0 -
+b0 ,
+b0 +
+bx &
+bx %
+bx $
+bx #
+bx "
+bx !
+$end
+#50
+b0 }
+11
+#70
+12

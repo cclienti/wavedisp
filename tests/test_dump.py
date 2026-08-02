@@ -1,0 +1,277 @@
+#
+# This file is part of wavedisp. See the root README.md for further
+# information.
+#
+# wavedisp is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# wavedisp is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with wavedisp.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright (C) 2019 Christophe Clienti
+
+"""Test the dump readers.
+
+The fixtures under ``data`` are dumps of two testbenches of the
+verilog-ip repository, produced by a simulator wherever one can write
+the format, so that the expected values come from a writer and not from
+a conversion (see ``data/regenerate.sh``):
+
+* ``dpmemrf_tb`` was dumped four times by Icarus Verilog, once per
+  format it writes, so the four readers can be confronted with each
+  other on the same design.
+* ``dpmemrf_tb_verilator`` is the same testbench run by Verilator, which
+  packs the FST hierarchy with LZ4 where Icarus uses gzip. Its VCD comes
+  from the same run, and is the reference the FST is checked against.
+* ``parmem3_2_tb`` brings a deeper hierarchy, with generate blocks and
+  bit ranges, dumped by Icarus to VCD and FST.
+* the VZT files are the exception: no simulator writes that format, so
+  they were converted from the VCD by ``vcd2vzt``. The converter drops
+  the unnamed scopes of the dump and promotes what they held, which is
+  why they hold fewer signals than the VCD they were made from -- and
+  why they are also checked against gtkwave's own reader, in
+  ``test_dump_gtkwave.py``.
+"""
+
+import gzip
+import io
+import tempfile
+import unittest
+from pathlib import Path
+
+from wavedisp.dump import DumpError, read_signals
+from wavedisp.dump._util import lz4_decompress
+from wavedisp.dump.signals import DumpSignals
+
+DATA_DIR = Path(__file__).parent / "data"
+
+# Icarus writes the parameters of a design to VCD and FST but not to LXT
+# or LXT2, hence the two counts.
+DPMEMRF_SIGNALS = 109
+DPMEMRF_SIGNALS_NO_PARAMETERS = 84
+PARMEM_SIGNALS = 1163
+# The vcd2vzt converter drops the unnamed scopes Icarus generates and
+# promotes the signals they held, so this count is not the one of the
+# source VCD. test_dump_gtkwave.py confirms it against gtkwave itself.
+PARMEM_VZT_SIGNALS = 630
+
+
+def signal_set(filename):
+    """Return the signals of a fixture, bit ranges left out."""
+
+    signals = read_signals(DATA_DIR / filename)
+
+    return {name.split(" ")[0] for name in signals}
+
+
+class TestDumpReaders(unittest.TestCase):
+    """Test the reader of each dump format."""
+
+    def test_format_detection(self):
+        """Formats are recognised from their content, not their suffix."""
+
+        for filename, expected in [
+            ("dpmemrf_tb.vcd", "vcd"),
+            ("dpmemrf_tb.fst", "fst"),
+            ("dpmemrf_tb.lxt", "lxt"),
+            ("dpmemrf_tb.lxt2", "lxt2"),
+            ("parmem3_2_tb.vzt", "vzt"),
+        ]:
+            with self.subTest(filename=filename):
+                self.assertEqual(read_signals(DATA_DIR / filename).format_name, expected)
+
+    def test_vcd_and_fst_agree(self):
+        """A VCD and the FST written from it hold the same signals."""
+
+        self.assertEqual(len(signal_set("dpmemrf_tb.vcd")), DPMEMRF_SIGNALS)
+        self.assertEqual(signal_set("dpmemrf_tb.vcd"), signal_set("dpmemrf_tb.fst"))
+
+    def test_deep_hierarchy(self):
+        """A dump with generate blocks reads the same as VCD and FST."""
+
+        self.assertEqual(len(signal_set("parmem3_2_tb.vcd")), PARMEM_SIGNALS)
+        self.assertEqual(signal_set("parmem3_2_tb.vcd"), signal_set("parmem3_2_tb.fst"))
+
+    def test_lz4_compressed_hierarchy(self):
+        """An FST written by Verilator packs its hierarchy with LZ4.
+
+        Both files come out of the same run, so the VCD is a reference
+        no conversion took part in.
+        """
+
+        self.assertEqual(len(signal_set("dpmemrf_tb_verilator.fst")), DPMEMRF_SIGNALS)
+        self.assertEqual(signal_set("dpmemrf_tb_verilator.fst"), signal_set("dpmemrf_tb_verilator.vcd"))
+
+    def test_lxt_and_lxt2_agree(self):
+        """The two legacy Icarus formats hold the same signals.
+
+        Both miss the parameters, which their writer does not dump, so
+        they are a subset of what the VCD of the same run holds.
+        """
+
+        lxt = signal_set("dpmemrf_tb.lxt")
+
+        self.assertEqual(len(lxt), DPMEMRF_SIGNALS_NO_PARAMETERS)
+        self.assertEqual(lxt, signal_set("dpmemrf_tb.lxt2"))
+        self.assertLess(lxt, signal_set("dpmemrf_tb.vcd"))
+
+    def test_vzt_compressions_agree(self):
+        """A VZT reads whether it is gzip, bzip2 or lzma compressed."""
+
+        gzipped = signal_set("parmem3_2_tb.vzt")
+
+        self.assertEqual(len(gzipped), PARMEM_VZT_SIGNALS)
+        self.assertEqual(gzipped, signal_set("parmem3_2_tb_bz2.vzt"))
+        self.assertEqual(gzipped, signal_set("parmem3_2_tb_lzma.vzt"))
+
+    def test_hierarchy_is_kept(self):
+        """Signal paths carry the whole instance path, dot separated."""
+
+        signals = read_signals(DATA_DIR / "parmem3_2_tb.fst")
+
+        self.assertIn("parmem3_2_tb.gen_sweep[3].sweep_inst.addr", signals)
+        self.assertIn("parmem3_2_tb.parmem3_2_inst.ben[7:0]", signals)
+
+    def test_gzipped_file(self):
+        """A dump compressed as a whole is unwrapped on the way."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            zipped = Path(directory) / "dpmemrf_tb.vcd.gz"
+            zipped.write_bytes(gzip.compress((DATA_DIR / "dpmemrf_tb.vcd").read_bytes()))
+
+            self.assertEqual({name.split(" ")[0] for name in read_signals(zipped)}, signal_set("dpmemrf_tb.vcd"))
+
+    def test_unreadable_file(self):
+        """A file that is no dump at all is reported as such."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            garbage = Path(directory) / "garbage.vcd"
+            garbage.write_bytes(b"\x7fELF\x02\x01\x01\x00 not a dump at all")
+
+            with self.assertRaises(DumpError):
+                read_signals(garbage)
+
+
+class TestDumpSignals(unittest.TestCase):
+    """Test how signal names are matched."""
+
+    def test_bit_range_is_optional(self):
+        """A range in the wave file, in the dump, or in neither, match."""
+
+        signals = DumpSignals(["tb.dut.doa [31:0]", "tb.dut.clk"])
+
+        self.assertIn("tb.dut.doa", signals)
+        self.assertIn("tb.dut.doa[31:0]", signals)
+        self.assertIn("tb.dut.clk", signals)
+        self.assertIn("tb.dut.clk[0]", signals)
+
+    def test_array_index_is_not_a_range(self):
+        """An index selects a signal of its own and has to match."""
+
+        signals = DumpSignals(["tb.dut.mem[3] [7:0]"])
+
+        self.assertIn("tb.dut.mem[3]", signals)
+        self.assertNotIn("tb.dut.mem[9]", signals)
+
+    def test_scope_must_match(self):
+        """Leniency stops at bit ranges: a wrong path is a wrong path."""
+
+        signals = DumpSignals(["tb.dut.clk"])
+
+        self.assertNotIn("tb.clk", signals)
+        self.assertNotIn("tb.dut.clock", signals)
+        self.assertNotIn("dut.clk", signals)
+
+
+def lz4_literals(data: bytes) -> bytes:
+    """Pack ``data`` into an LZ4 block made of literals only.
+
+    A block of nothing but literals is what the format allows in the
+    worst case, and it needs no compressor to produce, which is what
+    makes it usable to test the decompressor.
+    """
+
+    length = len(data)
+    token = min(length, 15)
+    block = bytearray([token << 4])
+
+    if length >= 15:
+        remaining = length - 15
+        while remaining >= 255:
+            block.append(255)
+            remaining -= 255
+        block.append(remaining)
+
+    return bytes(block) + data
+
+
+class TestLz4(unittest.TestCase):
+    """Test the LZ4 block decompressor."""
+
+    def test_literals_only(self):
+        """A block of literals, over and under the token limit."""
+
+        for data in [b"", b"short", b"x" * 300]:
+            with self.subTest(size=len(data)):
+                self.assertEqual(lz4_decompress(lz4_literals(data), len(data)), data)
+
+    def test_overlapping_match(self):
+        """A match closer than it is long repeats what it just wrote."""
+
+        # Two literals, then a match of six bytes two bytes back.
+        block = bytes([0x22, ord("a"), ord("b"), 0x02, 0x00])
+
+        self.assertEqual(lz4_decompress(block, 8), b"abababab")
+
+    def test_truncated_block(self):
+        """A block that stops early is an error, not a short result."""
+
+        with self.assertRaises(DumpError):
+            lz4_decompress(lz4_literals(b"12345"), 6)
+
+
+class TestFstSections(unittest.TestCase):
+    """Test the FST section walk on files no writer here produces."""
+
+    HIERARCHY = bytes([254, 1]) + b"tb\0\0" + bytes([0, 0]) + b"clk\0" + bytes([1, 0]) + bytes([255])
+
+    @staticmethod
+    def section(section_type: int, payload: bytes) -> bytes:
+        """Return a section, its length field counting itself."""
+
+        return bytes([section_type]) + (len(payload) + 8).to_bytes(8, "big") + payload
+
+    def fst_file(self, section_type: int, payload: bytes) -> io.BytesIO:
+        """Return a minimal FST holding a header and one section."""
+
+        header = self.section(0, bytes(321))
+
+        return io.BytesIO(header + self.section(section_type, payload))
+
+    def test_hierarchy_packed_twice(self):
+        """The LZ4DUO variant, used for hierarchies over four megabytes.
+
+        No fixture can exercise it: it takes a design large enough for
+        the writer to choose it, which no test dump reaches.
+        """
+
+        once = lz4_literals(self.HIERARCHY)
+        twice = lz4_literals(once)
+        payload = len(self.HIERARCHY).to_bytes(8, "big") + bytes([len(once)]) + twice
+
+        signals = read_signals(self.fst_file(7, payload))
+
+        self.assertEqual(list(signals), ["tb.clk"])
+
+    def test_no_hierarchy_section(self):
+        """A file whose sections hold no hierarchy is an error."""
+
+        with self.assertRaises(DumpError):
+            read_signals(self.fst_file(1, bytes(16)))
