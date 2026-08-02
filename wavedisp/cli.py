@@ -27,6 +27,7 @@ import logging
 from wavedisp.ast import Block
 from wavedisp.checker import SignalChecker
 from wavedisp.dump import DumpError, read_signals
+from wavedisp.dump.signals import canonical
 from wavedisp.targets import TargetOptionError
 from wavedisp.targets.gtkwave import GTKWaveTarget
 from wavedisp.targets.modelsim import ModelsimTarget
@@ -182,13 +183,46 @@ def check_signals(block, filename, logger):
     )
 
 
+def print_dump_signals(filename, logger) -> int:
+    """Write the signals ``filename`` holds to the standard output.
+
+    One path per line, in the order the dump declares them, which is the
+    order the design was elaborated in and keeps a hierarchy readable.
+    Sorting is one pipe away, and undoing it would not be.
+
+    Names are printed the way a wave file has to spell them, so that a
+    line can be pasted straight into a ``Disp``: the bit range loses the
+    space some writers put before it, ``doa [31:0]`` being what the file
+    stores and ``doa[31:0]`` what a viewer is asked for.
+
+    :param str filename: dump file to read.
+    :param logger: logger to report on.
+    :return: the exit status.
+    """
+
+    try:
+        signals = read_signals(filename)
+    except (OSError, DumpError) as error:
+        logger.error('cannot read the dump "%s": %s', filename, error)
+        return 1
+
+    for name in signals:
+        print(canonical(name))
+
+    logger.info('"%s" holds %i signals (%s)', filename, len(signals), signals.format_name)
+
+    return 0
+
+
 def main():
     """Command line interface entry point."""
 
     description = "Wavedisp, the waveforms file generator"
     parser = argparse.ArgumentParser(description=description, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument("input", help="input file")
+    # Optional because --list-signals reads a dump and writes no wave
+    # file, so it has no description to start from.
+    parser.add_argument("input", nargs="?", help="input file")
     parser.add_argument("-o", "--output", help="output filename")
 
     parser.add_argument(
@@ -215,6 +249,15 @@ def main():
             "missing from it is reported as an error"
         ),
     )
+    parser.add_argument(
+        "-l",
+        "--list-signals",
+        metavar="DUMP",
+        help=(
+            "print the signals a dump file holds, one path per line, and "
+            "exit; takes no input file and writes no waveforms file"
+        ),
+    )
     parser.add_argument("-v", "--verbose", action="store_true", help="verbose mode")
     parser.add_argument("-d", "--debug", action="store_true", help="debug mode")
 
@@ -234,6 +277,12 @@ def main():
     )
 
     logger = logging.getLogger("wavegen:cli")
+
+    if args.list_signals:
+        exit(print_dump_signals(args.list_signals, logger))
+
+    if args.input is None:
+        parser.error("an input file is required, unless -l/--list-signals is given")
 
     # -a goes to the generator function in the input file, -T to the
     # target class: one parameterises the description, the other how it

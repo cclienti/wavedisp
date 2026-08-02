@@ -245,17 +245,20 @@ wavedisp -g post_synth_generator -o out.tcl parmem_tb.wave.py
 ## Command line
 
 ```
-wavedisp [-h] [-o OUTPUT] [-t TARGET] [-g GENERATOR] [-a KWARGS] [-T TARGET_KWARGS] [-v] [-d] input
+wavedisp [-h] [-o OUTPUT] [-t TARGET] [-g GENERATOR] [-a KWARGS] [-T TARGET_KWARGS] [-c CHECK] [-l DUMP] [-v] [-d]
+         [input]
 ```
 
 | Option | Meaning |
 | --- | --- |
-| `input` | the description file |
+| `input` | the description file — not needed with `-l` |
 | `-o`, `--output` | output filename |
 | `-t`, `--target` | `gtkwave` (default), `modelsim`, `rivierapro`, `surfer`, `dot` |
 | `-g`, `--generator` | name of the generator function (default `generator`) |
 | `-a`, `--kwargs` | JSON object passed to the **generator function** |
 | `-T`, `--target-kwargs` | JSON object passed to the **target** |
+| `-c`, `--check` | dump the declared signals must be found in — see [Checking a description](#checking-a-description) |
+| `-l`, `--list-signals` | print the signals a dump holds and exit — see [Listing what a dump holds](#listing-what-a-dump-holds) |
 | `-v`, `--verbose` | log every file included and the generator used for it |
 | `-d`, `--debug` | more of the same |
 
@@ -378,9 +381,58 @@ Generated save files are build artefacts: keep the `.wave.py` in version control
 
 ### Checking a description
 
-Nothing generates a description from the RTL and nothing checks it against a dump, so a renamed port leaves a signal
-silently absent. The `dot` target renders the tree wavedisp built, which is the quickest way to see what a
-parameterised description actually produced:
+Nothing generates a description from the RTL, so a renamed port leaves a signal silently absent — an empty row in the
+viewer, and nothing else to say so. Pass a dump of the run and every declared signal is looked up in it:
+
+```sh
+wavedisp -t gtkwave -o tb.tcl --check tb.fst tb.wave.py
+```
+
+```
+tb.wave.py:23: signal "tb.dut.addrra" not found in "tb.fst"
+```
+
+The dump may be a VCD, FST, LXT, LXT2 or VZT file, gzipped or not, and the format is recognised from the content rather
+than from the suffix. Only the declarations are read, never the value changes, so the check costs the same on a dump of
+a few kilobytes and on one of several gigabytes. A failed check does not veto the generation — the file may well be
+right for the next run — but it does make wavedisp exit non-zero.
+
+The `wavedisp.dump` package does that lookup and nothing else, should a script need it:
+
+```python
+from wavedisp.dump import read_signals
+
+signals = read_signals('tb.fst')
+'tb.dut.clk' in signals
+```
+
+### Listing what a dump holds
+
+The other direction, for when the question is what the design is even called — a generate block whose elaborated name
+is anyone's guess, or the instance path a signal ended up under:
+
+```sh
+wavedisp -l tb.fst
+```
+
+```
+tb.dut.clk
+tb.dut.gen_lane[2].lane_inst.valid
+tb.dut.count[7:0]
+```
+
+One path per line, in declaration order, spelled the way a `Disp` wants them — a line can be pasted into a description
+as it stands, bit range included. Sorting, filtering and counting are what the shell is for:
+
+```sh
+wavedisp -l tb.fst | grep fifo_inst
+wavedisp -l tb.fst | wc -l
+```
+
+This mode takes no description and writes no save file, so `input` and `-o` are left out.
+
+The `dot` target renders the tree wavedisp built, which is the quickest way to see what a parameterised description
+actually produced:
 
 ```sh
 wavedisp -t dot -o layout.dot tb.wave.py && xdot layout.dot
@@ -413,28 +465,6 @@ it looks. The `radix` mapping in the Riviera-PRO target described [above](#model
 kind of thing that has gone unnoticed as a result.
 
 The GTKWave and Surfer targets are checked against the real viewers.
-
-## Checking a wave file against a dump
-A wave file is written by hand and nothing else confronts it with the design: a renamed instance or a signal that moved
-shows up as an empty row in the viewer, silently. Pass a dump of the simulation and every declared signal is looked up
-in it, the ones that are missing being reported with the file and line they were declared on:
-
-```sh
-wavedisp -t gtkwave -o tb.tcl --check tb.fst tb.wave.py
-```
-
-The dump may be a VCD, FST, LXT, LXT2 or VZT file, gzipped or not, and the format is recognised from the content rather
-than from the suffix. Only the declarations are read, never the value changes, so the check costs the same on a dump of
-a few kilobytes and on one of several gigabytes. The generation is not vetoed by a failed check, but the exit status is.
-
-The `wavedisp.dump` package does that lookup and nothing else:
-
-```python
-from wavedisp.dump import read_signals
-
-signals = read_signals('tb.fst')
-'tb.dut.clk' in signals
-```
 
 ## License
 
