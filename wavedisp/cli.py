@@ -49,6 +49,50 @@ TARGETS = {target.name: target for target in TARGET_CLASSES}
 #: and validated without a second list having to be remembered.
 TARGET_NAMES = [*sorted(TARGETS), "dot"]
 
+DESCRIPTION = """\
+Wavedisp, the waveforms file generator.
+
+One description of a waveform layout, written in Python next to the RTL
+it follows, and the save file each viewer wants. A dump of the run may
+be given too: the declared signals are then checked against it, and the
+targets that name their rows from a dump read it.
+"""
+
+EXAMPLES = """\
+examples:
+  wavedisp -o tb.gtkwave.tcl tb.wave.py
+        the default target, a TCL script for gtkwave -S
+
+  wavedisp -t surfer -o tb.sucl tb.wave.py
+        the same layout for another viewer
+
+  wavedisp -o tb.tcl -D tb.fst tb.wave.py
+        generate, and report every declared signal the dump does not hold
+
+  wavedisp -t gtkwave-savefile -o tb.gtkw -D tb.fst tb.wave.py
+        the save file gtkwave opens beside a dump; it names its rows from
+        one, so -D is required rather than optional here
+
+  wavedisp -D tb.fst
+        no description to render: list what the dump holds, one path per
+        line, spelled the way a Disp wants it
+
+  wavedisp -a '{"nb_banks": 8, "internals": true}' -o tb.tcl tb.wave.py
+        arguments for the generator function of the description
+
+  wavedisp -t dot -o tb.dot tb.wave.py
+        render the tree wavedisp built, to see what a parameterised
+        description produced
+"""
+
+
+class HelpFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
+    """Keep the defaults on the options and the layout of the prose.
+
+    argparse offers the two separately: one appends the default value to
+    each option, the other stops rewrapping the text around them.
+    """
+
 
 def decode_kwargs(text, option, logger):
     """Decode one of the json dictionaries the command line takes.
@@ -252,8 +296,11 @@ def main() -> int:
     installed by the packaging exits on it.
     """
 
-    description = "Wavedisp, the waveforms file generator"
-    parser = argparse.ArgumentParser(description=description, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=DESCRIPTION,
+        epilog=EXAMPLES,
+        formatter_class=HelpFormatter,
+    )
 
     # Optional: a run given a dump and no description has nothing to
     # render, and lists what the dump holds instead.

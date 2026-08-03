@@ -108,6 +108,20 @@ class TestListSignals(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("input file is required", result.stderr)
 
+    def test_the_help_shows_both_uses_of_a_dump(self):
+        """The two modes are what a help text has to make obvious.
+
+        The examples are laid out by hand, so this also catches the
+        formatter losing the one that keeps them from being rewrapped
+        into a paragraph.
+        """
+
+        result = self.run_cli("--help")
+
+        self.assertIn("examples:", result.stdout)
+        self.assertIn("  wavedisp -D tb.fst\n", result.stdout)
+        self.assertIn("  wavedisp -t gtkwave-savefile -o tb.gtkw -D tb.fst tb.wave.py\n", result.stdout)
+
     def test_unreadable_dump_fails(self):
         """A dump that cannot be read fails, and prints no signal."""
 
