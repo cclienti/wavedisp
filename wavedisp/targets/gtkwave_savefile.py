@@ -43,6 +43,17 @@ TCL target:
 The format is not documented; what is written here follows GTKWave's own
 writer, ``src/savefile.c``, its flag bits, ``src/analyzer.h``, its colour
 numbering, ``src/color.h``, and the way ``src/menu.c`` builds a group.
+
+Checked against the viewer rather than against those sources alone: a
+file generated for a 166 row description was opened in GTKWave 3.3.127
+and saved back from it, and the two agree on every row, in order, groups
+and dividers included. That round trip is what caught the one row that
+did not bind -- see ``viewer_name`` in the dump package.
+
+Where a description sets no radix this target writes none, and GTKWave
+fills in its own on load: binary for a scalar, hexadecimal for a bus,
+signed decimal for an integer. Stating one here would only overrule the
+viewer's default with a guess.
 """
 
 import logging
