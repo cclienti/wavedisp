@@ -161,6 +161,40 @@ class TestDumpReaders(unittest.TestCase):
 
         self.assertEqual({name.split(" ")[0] for name in read_signals(zipped)}, signal_set("dpmemrf_tb.vcd"))
 
+    def test_an_integer_is_named_without_its_range(self):
+        """A viewer holds an integer as one value, not as bits.
+
+        Icarus declares one as ``$var integer 32 ! errors [31:0]``, and
+        GTKWave keeps only ``errors``: a save file naming the range
+        names nothing, and the row is silently not drawn. The same holds
+        for reals, parameters, strings and the SystemVerilog widths.
+        """
+
+        vcd = io.BytesIO(
+            b"$scope module tb $end\n"
+            b"$var integer 32 ! errors [31:0] $end\n"
+            b"$var parameter 32 # DEPTH [31:0] $end\n"
+            b"$var real 64 $ level $end\n"
+            b"$var reg 32 % count [31:0] $end\n"
+            b"$upscope $end\n"
+            b"$enddefinitions $end\n"
+        )
+
+        self.assertEqual(
+            list(read_signals(vcd)),
+            ["tb.errors", "tb.DEPTH", "tb.level", "tb.count [31:0]"],
+        )
+
+    def test_an_integer_of_an_fst_is_named_without_its_range(self):
+        """The FST reader tells the types apart by the record tag."""
+
+        signals = read_signals(DATA_DIR / "parmem3_2_tb.fst")
+
+        self.assertIn("parmem3_2_tb.errors", signals.names)
+        self.assertEqual(signals.resolve("parmem3_2_tb.errors"), "parmem3_2_tb.errors")
+        # The buses around it keep theirs.
+        self.assertEqual(signals.resolve("parmem3_2_tb.addr"), "parmem3_2_tb.addr[5:0]")
+
     def test_unnamed_scope(self):
         """An unnamed scope is named, and named as the FST reader does.
 
