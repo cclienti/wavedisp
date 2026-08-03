@@ -166,6 +166,24 @@ class TestWhatTheFormatCannotDo(unittest.TestCase):
 
         self.assertIn("height", logs.output[0])
 
+    def test_a_bit_select_is_reported_rather_than_widened(self):
+        """Naming the bus would put a row in that was not asked for.
+
+        The dump has `dia [63:0]`; a description asking for one bit of
+        it, or for half of it, gets an error and no row, where widening
+        to the whole bus would look like success.
+        """
+
+        for value in ["dia[3]", "dia[63:32]"]:
+            with self.subTest(value=value):
+                testbench = Hierarchy("/parmem3_2_tb")
+                testbench.add(Disp(value))
+
+                with self.assertLogs("wavegen", level="ERROR") as logs:
+                    self.assertEqual(rows(generate(testbench, "parmem3_2_tb.vcd")), [])
+
+                self.assertIn("cannot name the bits", logs.output[0])
+
     def test_a_signal_the_dump_lacks_is_dropped_and_reported(self):
         """A row GTKWave could not bind is worse than no row at all."""
 

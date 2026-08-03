@@ -268,6 +268,37 @@ class TestDumpSignals(unittest.TestCase):
         signals = DumpSignals(["tb.dut.doa [31:0]"])
 
         self.assertIn("tb.dut.doa[3]", signals)
+        self.assertIn("tb.dut.doa[31:16]", signals)
+
+    def test_a_bit_outside_the_bus(self):
+        """The dump states the width, so an impossible bit is reported.
+
+        Passing it is the silent empty row the check exists to catch: no
+        viewer binds a row for bit 99 of a 32-bit bus.
+        """
+
+        signals = DumpSignals(["tb.dut.doa [31:0]"])
+
+        self.assertNotIn("tb.dut.doa[99]", signals)
+        self.assertNotIn("tb.dut.doa[63:32]", signals)
+        self.assertNotIn("tb.dut.clk[1]", DumpSignals(["tb.dut.clk"]))
+
+    def test_naming_is_stricter_than_membership(self):
+        """A bit select is not the signal it takes its bits from.
+
+        Resolving is what a target writes into a file, so it answers for
+        the same signal or for nothing: widening `doa[3]` to the whole
+        bus would put a row in a save file that is not the one asked
+        for, which is worse than the row being absent.
+        """
+
+        signals = DumpSignals(["tb.dut.doa [31:0]"])
+
+        self.assertEqual(signals.resolve("tb.dut.doa"), "tb.dut.doa[31:0]")
+        self.assertEqual(signals.resolve("tb.dut.doa[31:0]"), "tb.dut.doa[31:0]")
+        self.assertIsNone(signals.resolve("tb.dut.doa[3]"))
+        self.assertEqual(signals.selects("tb.dut.doa[3]"), "tb.dut.doa[31:0]")
+        self.assertIsNone(signals.selects("tb.dut.doa[99]"))
 
     def test_scope_must_match(self):
         """Leniency stops at bit ranges: a wrong path is a wrong path."""

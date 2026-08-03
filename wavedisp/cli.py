@@ -29,7 +29,7 @@ from wavedisp.ast import Block
 from wavedisp.checker import SignalChecker
 from wavedisp.dump import DumpError, read_signals
 from wavedisp.dump.signals import canonical
-from wavedisp.targets import TargetOptionError
+from wavedisp.targets import Target, TargetOptionError
 from wavedisp.targets.gtkwave import GTKWaveTarget
 from wavedisp.targets.gtkwave_savefile import GTKWaveSaveFileTarget
 from wavedisp.targets.modelsim import ModelsimTarget
@@ -49,6 +49,11 @@ TARGETS = {target.name: target for target in TARGET_CLASSES}
 #: rather than written out, so that a target added to TARGETS is offered
 #: and validated without a second list having to be remembered.
 TARGET_NAMES = [*sorted(TARGETS), "dot"]
+
+#: What -t means when it is not given. Left out of the default of the
+#: option itself, so that a listing run can tell an explicit -t from no
+#: -t at all and refuse the first.
+DEFAULT_TARGET = "gtkwave"
 
 DESCRIPTION = """\
 Wavedisp, the waveforms file generator.
@@ -220,6 +225,22 @@ class LoggingLevelCounterHandler(logging.Handler):
         return 1 if self.level_counter.get("ERROR") else 0
 
 
+def write_output(filename, text, logger):
+    """Write the generated file, reporting rather than raising.
+
+    Shared by every target, the AST renderer included: it used to open
+    its file with no guard at all, so the same unwritable path was a
+    message and an exit status through one branch and a traceback
+    through the other.
+    """
+
+    try:
+        with open(filename, "w") as output:
+            output.write(text)
+    except OSError as error:
+        logger.error('cannot write to "%s": %s', filename, error)
+
+
 def load_dump(filename, logger):
     """Read the dump, once, for whatever this run does with it.
 
@@ -312,15 +333,17 @@ def main() -> int:
         "-t",
         "--target",
         type=str,
-        default="gtkwave",
         choices=TARGET_NAMES,
-        help="targeted viewer for the generated waveforms file; dot renders the AST itself, for graphviz",
+        help=(
+            f"targeted viewer for the generated waveforms file, {DEFAULT_TARGET} by default; "
+            "dot renders the AST itself, for graphviz"
+        ),
     )
     parser.add_argument(
         "-g", "--generator", type=str, default="generator", help="generator function name in the input file"
     )
     parser.add_argument("-a", "--kwargs", default="{}", help="arguments dictionary for the generator function in json")
-    parser.add_argument("-T", "--target-kwargs", default="{}", help="arguments dictionary for the target in json")
+    parser.add_argument("-T", "--target-kwargs", help="arguments dictionary for the target in json, {} by default")
     parser.add_argument(
         "-D",
         "--dump",
@@ -334,7 +357,12 @@ def main() -> int:
     parser.add_argument("-v", "--verbose", action="store_true", help="verbose mode")
     parser.add_argument("-d", "--debug", action="store_true", help="debug mode")
 
-    args = parser.parse_args()
+    try:
+        args = parser.parse_args()
+    except SystemExit as status:
+        # Argparse reports the error itself and exits; the status is
+        # returned like any other, main() having promised not to raise.
+        return status.code if isinstance(status.code, int) else 1
 
     log_level = logging.WARNING
     if args.debug:
@@ -359,6 +387,13 @@ def main() -> int:
     logging.getLogger().addHandler(counter)
     try:
         return _run(args, parser, counter)
+    except SystemExit as status:
+        # What parser.error() raises. Caught so that the promise above
+        # holds for every outcome and not merely for the ones this
+        # module reports itself: a caller driving several runs is
+        # stopped by an exception on the one class of error it is most
+        # likely to hit, a wrong combination of arguments.
+        return status.code if isinstance(status.code, int) else 1
     finally:
         logging.getLogger().removeHandler(counter)
 
@@ -372,22 +407,35 @@ def _run(args, parser, counter) -> int:
         if args.dump is None:
             parser.error("an input file is required, unless -D/--dump is given on its own to list its signals")
 
-        # An output file asked for with nothing to render is the shape a
-        # forgotten description takes, and printing a signal list where a
-        # wave file was expected would pass for a successful run.
-        if args.output:
-            parser.error("-o/--output takes an input file to render; the signals of a dump are printed on the output")
+        # Every option that only makes sense when something is rendered
+        # is refused rather than ignored: a forgotten description takes
+        # exactly that shape, and a run that printed a signal list where
+        # a wave file was expected would pass for a successful one.
+        for option, value in (
+            ("-o/--output", args.output),
+            ("-t/--target", args.target),
+            ("-T/--target-kwargs", args.target_kwargs),
+        ):
+            if value is not None:
+                parser.error(
+                    f"{option} takes an input file to render; -D/--dump on its own prints the signals it holds"
+                )
 
         return print_dump_signals(args.dump, logger)
+
+    if args.output is None:
+        parser.error("-o/--output is required to render an input file")
 
     # -a goes to the generator function in the input file, -T to the
     # target class: one parameterises the description, the other how it
     # is rendered. Both are user-written json, so neither is decoded
     # straight into a subscript or a splat.
     kwargs = decode_kwargs(args.kwargs, "-a/--kwargs", logger)
-    target_kwargs = decode_kwargs(args.target_kwargs, "-T/--target-kwargs", logger)
+    target_kwargs = decode_kwargs(args.target_kwargs or "{}", "-T/--target-kwargs", logger)
     if kwargs is None or target_kwargs is None:
         return 1
+
+    target_name = args.target or DEFAULT_TARGET
 
     kwargs["__generator"] = args.generator
 
@@ -404,34 +452,38 @@ def _run(args, parser, counter) -> int:
     block.include(input_file, **kwargs)
     block.forward()
 
-    # Read once, whether it goes to the check, to the target, or to both.
-    dump = load_dump(args.dump, logger) if args.dump else None
-    if dump is not None:
-        check_signals(block, dump, logger)
+    dump = None
+    if args.dump:
+        # Read once, for the check, for the target, or for both. A dump
+        # that was named and cannot be read stops the run here: going on
+        # would have the target report the dump as missing, which is not
+        # what the user typed.
+        dump = load_dump(args.dump, logger)
+        if dump is None:
+            return 1
 
-    if args.target == "dot":
+        # Skipped for a target that resolves its own names: it reports
+        # the same signals against the same lines, and the two together
+        # printed every error twice.
+        if "dump" not in TARGETS.get(target_name, Target).provided:
+            check_signals(block, dump, logger)
+
+    if target_name == "dot":
         # Rendered straight from the AST, with no target class to carry
         # an option -- but it still has to refuse one rather than write
         # the file as if it had been applied.
         if not check_target_kwargs("dot", set(), target_kwargs, logger):
             return 1
-        fmod = open(args.output, "w")
-        fmod.write(str(block.children[0]))
-        fmod.close()
+        write_output(args.output, str(block.children[0]), logger)
         # Not a plain 0: a check that found a missing signal has to fail
         # this target like it fails the others.
         return counter.error_status()
 
-    target = make_target(args.target, block, logger, target_kwargs, dump)
+    target = make_target(target_name, block, logger, target_kwargs, dump)
     if target is None:
         return 1
 
-    try:
-        fmod = open(args.output, "w")
-        fmod.write(target.genstr)
-        fmod.close()
-    except OSError:
-        logger.error('cannot write to "%s"', args.output)
+    write_output(args.output, target.genstr, logger)
 
     return counter.error_status()
 

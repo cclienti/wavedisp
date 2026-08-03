@@ -408,12 +408,19 @@ Where the dump is a prerequisite anyway, name it: the rule then fails on a signa
 view with a row missing from it.
 
 ```makefile
+.DELETE_ON_ERROR:
+
 %.gtkw: %.wave.py %.fst
 	wavedisp -t gtkwave-savefile -o $@ -D $*.fst $<
 
 trace: $(TB).fst $(TB).gtkw
 	gtkwave $(TB).fst $(TB).gtkw
 ```
+
+`.DELETE_ON_ERROR:` is what makes that stick, and it is worth the line. A failed check does not stop the file from
+being written — it may well be the right file for the next run — so without it make would find a target newer than its
+prerequisites on the second invocation, report nothing, and hand over the view whose row is missing. The rule would
+fail once and pass for ever after.
 
 Generated save files are build artefacts: keep the `.wave.py` in version control and leave the rest out.
 
