@@ -3,20 +3,25 @@
 Describe a waveform layout once, in Python, and generate the save file every viewer wants.
 
 A testbench worth debugging twice deserves a signal list worth keeping. Every viewer stores one, but each in its own
-format — [GTKWave](https://github.com/gtkwave/gtkwave)'s TCL, [Modelsim](https://eda.sw.siemens.com/en-US/ic/questa/simulation/advanced-simulator/)'s `do` script,
+format — [GTKWave](https://github.com/gtkwave/gtkwave)'s TCL and its save file,
+[Modelsim](https://eda.sw.siemens.com/en-US/ic/questa/simulation/advanced-simulator/)'s `do` script,
 [Surfer](https://gitlab.com/surfer-project/surfer)'s command file — none of which is pleasant to write by hand, all
 of which drift the moment a port is renamed. Wavedisp keeps the description in one Python file next to the RTL, under
 version control, and emits the rest:
 
 ```sh
-wavedisp -t gtkwave    -o counter_tb.gtkwave.tcl    counter_tb.wave.py
-wavedisp -t modelsim   -o counter_tb.modelsim.tcl   counter_tb.wave.py
-wavedisp -t rivierapro -o counter_tb.rivierapro.tcl counter_tb.wave.py
-wavedisp -t surfer     -o counter_tb.sucl           counter_tb.wave.py
+wavedisp -t gtkwave          -o counter_tb.gtkwave.tcl    counter_tb.wave.py
+wavedisp -t modelsim         -o counter_tb.modelsim.tcl   counter_tb.wave.py
+wavedisp -t rivierapro       -o counter_tb.rivierapro.tcl counter_tb.wave.py
+wavedisp -t surfer           -o counter_tb.sucl           counter_tb.wave.py
+wavedisp -t gtkwave-savefile -o counter_tb.gtkw -D counter_tb.fst counter_tb.wave.py
 ```
 
 Because a description is a Python program, it can take parameters, loop over generate blocks, and be included by
 another description — the same way the RTL it follows is written.
+
+Given a dump of the run, wavedisp also reports the declared signals it does not hold, and lists what it does —
+see [Checking a description](#checking-a-description).
 
 ## Installation
 
@@ -399,6 +404,17 @@ trace: $(TB).vcd $(TB).gtkwave.tcl
 	gtkwave -S $(TB).gtkwave.tcl $(TB).vcd
 ```
 
+Where the dump is a prerequisite anyway, name it: the rule then fails on a signal that moved, instead of producing a
+view with a row missing from it.
+
+```makefile
+%.gtkw: %.wave.py %.fst
+	wavedisp -t gtkwave-savefile -o $@ -D $*.fst $<
+
+trace: $(TB).fst $(TB).gtkw
+	gtkwave $(TB).fst $(TB).gtkw
+```
+
 Generated save files are build artefacts: keep the `.wave.py` in version control and leave the rest out.
 
 ### Checking a description
@@ -474,10 +490,26 @@ uv run --group dev ruff check wavedisp tests
 uv run --group dev ruff format --check wavedisp tests
 ```
 
-A new target is a `Visitor` subclass in `wavedisp/targets/`, implementing `process_group`, `process_divider` and
-`process_disp`, exposing the generated text as `genstr`, and registered in the `TARGETS` dictionary in
-`wavedisp/cli.py`. Constructor keyword arguments become `-T` options automatically, checked against the target's
-signature.
+Some tests run other programs and skip without them, which the CI installs so that they cannot: `tclsh` replays the
+generated GTKWave scripts, and the `fst2vcd`, `lxt2vcd` and `vzt2vcd` helpers of GTKWave read the binary dump fixtures
+back, so that the readers are confronted with the reference implementation of each format rather than with themselves.
+Regenerating those fixtures — `tests/data/regenerate.sh` — additionally wants Icarus Verilog and Verilator, and is not
+part of running the tests.
+
+### Adding a target
+
+A target is a `Target` subclass in `wavedisp/targets/`, that is:
+
+* declares `name`, the name `-t` takes for it;
+* does its work in `__init__` — header, `visit(tree)`, footer — implementing `process_group`, `process_divider` and
+  `process_disp`, and leaves the file in `genstr`;
+* is added to `TARGET_CLASSES` in `wavedisp/cli.py`, which is where the registry, the `-t` choices and the help text
+  all come from.
+
+Constructor keyword arguments become `-T` options automatically: `Target.options()` reads them off the signature, and
+a target whose options cannot be read that way overrides it. An argument the command line fills in itself rather than
+the user — the dump `gtkwave-savefile` names its rows from — is listed in `provided` instead, which keeps it out of
+`-T`.
 
 ## Contributing
 
