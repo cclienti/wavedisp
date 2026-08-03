@@ -79,25 +79,44 @@ class DumpSignals:
     bit of a bus still matches the bus the dump declares.
     """
 
-    def __init__(self, names, format_name: str = ""):
+    def __init__(self, names, format_name: str = "", filename: str = ""):
         self.names = tuple(names)
         self.format_name = format_name
+        self.filename = filename
 
-        self._exact = set()
-        self._bare = set()
+        # Every way a wave file may spell a signal, mapped to the way the
+        # dump spells it. Exact names go in first so that one of them
+        # wins over a bare form another signal happens to produce.
+        self._spelling = {}
         for name in self.names:
-            name = canonical(name)
-            self._exact.add(name)
-            self._bare.add(without_range(name))
+            self._spelling.setdefault(canonical(name), canonical(name))
+        for name in self.names:
+            self._spelling.setdefault(without_range(canonical(name)), canonical(name))
 
-    def __contains__(self, path: str) -> bool:
+    def resolve(self, path: str) -> str | None:
+        """Return the way the dump spells ``path``, if it holds it.
+
+        A viewer is asked for the name its dump declares, bit range and
+        all, where a description says ``dut.doa`` and means the same
+        signal. Resolving is therefore what a target does when the file
+        it writes has to name signals exactly, and what membership is
+        answered with.
+
+        :param str path: signal path as the wave file spells it.
+        :return: the dump's own spelling, or None if it holds no such
+            signal.
+        """
+
         path = canonical(path)
 
         for candidate in (path, without_range(path), without_index(without_range(path))):
-            if candidate in self._exact or candidate in self._bare:
-                return True
+            if candidate in self._spelling:
+                return self._spelling[candidate]
 
-        return False
+        return None
+
+    def __contains__(self, path: str) -> bool:
+        return self.resolve(path) is not None
 
     def __len__(self) -> int:
         return len(self.names)

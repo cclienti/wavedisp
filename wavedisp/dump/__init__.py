@@ -88,10 +88,12 @@ def read_signals(filename) -> DumpSignals:
         return _read_stream(filename)
 
     with open(filename, "rb") as stream:
-        return _read_stream(stream)
+        # The path is kept: a target writing a save file has to name the
+        # dump it was built for, and it has only what it is given.
+        return _read_stream(stream, filename=str(filename))
 
 
-def _read_stream(stream, unwrapped: bool = False) -> DumpSignals:
+def _read_stream(stream, unwrapped: bool = False, filename: str = "") -> DumpSignals:
     """Read a dump from an already opened binary stream.
 
     The gzip test lives here rather than beside the ``open`` above, so
@@ -108,8 +110,8 @@ def _read_stream(stream, unwrapped: bool = False) -> DumpSignals:
     stream.seek(0)
 
     if not unwrapped and magic.startswith(GZIP_MAGIC):
-        return _read_stream(gzip.GzipFile(fileobj=stream), unwrapped=True)
+        return _read_stream(gzip.GzipFile(fileobj=stream), unwrapped=True, filename=filename)
 
     module, format_name = _reader(magic)
 
-    return DumpSignals(module.read_signals(stream), format_name)
+    return DumpSignals(module.read_signals(stream), format_name, filename)

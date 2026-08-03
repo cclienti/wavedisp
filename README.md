@@ -276,6 +276,7 @@ half-correct file behind.
 | Viewer | `-t` | Output | Load it with |
 | --- | --- | --- | --- |
 | [GTKWave](https://github.com/gtkwave/gtkwave) | `gtkwave` | TCL script | `gtkwave -S layout.gtkwave.tcl dump.vcd` |
+| GTKWave | `gtkwave-savefile` | `.gtkw` save file | `gtkwave dump.fst layout.gtkw` — needs `-D`, see below |
 | [Modelsim / Questa](https://eda.sw.siemens.com/en-US/ic/questa/simulation/advanced-simulator/) | `modelsim` | TCL script | `vsim -do 'do layout.modelsim.tcl; run -all' tb` |
 | [Aldec Riviera-PRO](https://www.aldec.com/en/products/functional_verification/riviera-pro) | `rivierapro` | TCL script | `vsim -do 'do layout.rivierapro.tcl; run -all' tb` |
 | [Surfer](https://gitlab.com/surfer-project/surfer) | `surfer` | `.sucl` command file | `surfer dump.vcd --command-file layout.sucl` |
@@ -286,13 +287,33 @@ What each one honours:
 | | `radix` | `color` | `height` | groups |
 | --- | --- | --- | --- | --- |
 | GTKWave | all seven | nearest of 7 | ignored | yes |
+| GTKWave save file | all seven | nearest of 7 | ignored | yes |
 | Modelsim | all seven | exact RGB | pixels | yes |
 | Riviera-PRO | see note | exact RGB | pixels | yes |
 | Surfer | all seven | nearest of 8 | converted | yes |
 
 ### GTKWave
 
-Colours are reduced to the seven GTKWave supports, by nearest RGB. `height` has no equivalent and is dropped.
+Two targets for one viewer, and they are not interchangeable.
+
+`gtkwave` writes a TCL script: GTKWave runs it, resolves the names it is given, and can be told things a file cannot
+express. `gtkwave-savefile` writes the save file GTKWave writes itself — the one it opens beside a dump, with no `-S`,
+and the one it rewrites when you save your layout from the GUI:
+
+```sh
+wavedisp -t gtkwave-savefile -o tb.gtkw -D tb.fst tb.wave.py
+gtkwave tb.fst tb.gtkw
+```
+
+The save file names each row exactly as the dump declares it, bit range included — `tb.dut.doa[31:0]` where the
+description says `doa` — which is why `-D` is required rather than optional there. A signal the dump does not hold is
+reported and left out, a row GTKWave cannot bind being worse than no row.
+
+The dump has to be a VCD or an FST. LXT, LXT2 and VZT keep their bit ranges in a geometry table this package does not
+read, so every bus would be named without one; that is refused outright rather than written.
+
+Colours are reduced to the seven GTKWave supports, by nearest RGB, in both targets. `height` has no equivalent and is
+dropped — GTKWave stores no per-trace height at all, and the save file target says so on each row that asks for one.
 
 ### Modelsim and Riviera-PRO
 

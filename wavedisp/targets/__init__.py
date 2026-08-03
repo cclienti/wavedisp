@@ -54,6 +54,12 @@ class Target(Visitor):
     #: AttributeError from the caller.
     genstr = ""
 
+    #: Constructor arguments the command line fills in itself rather
+    #: than the user, such as the dump a save file has to name its
+    #: signals from. They are not options, and --target-kwargs may
+    #: neither pass nor be told about them.
+    provided: tuple[str, ...] = ()
+
     @classmethod
     def options(cls) -> set[str]:
         """Return the arguments this target takes besides the tree.
@@ -66,7 +72,7 @@ class Target(Visitor):
 
         parameters = inspect.signature(cls.__init__).parameters
 
-        return set(parameters) - {"self", "tree"}
+        return set(parameters) - {"self", "tree"} - set(cls.provided)
 
 
 class TargetOptionError(ValueError):
