@@ -1,0 +1,67 @@
+[*]
+[*] GTKWave Analyzer v3.3.127 (w)1999-2026 BSI
+[*] Mon Aug  3 18:37:55 2026
+[*]
+[dumpfile] "/home/christophe/src/verilog-ip/hw/lib/parmem/parmem3_2/project/parmem3_2_tb.fst"
+[dumpfile_mtime] "Mon Aug  3 16:49:40 2026"
+[dumpfile_size] 42725
+[savefile] "/tmp/wdcheck/reference.sav"
+[timestart] 0
+[size] 1000 600
+[pos] -1 -1
+*0.000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 273
+[signals_width] 166
+[sst_expanded] 1
+[sst_vpaned_height] 157
+@200
+-one row per radix
+@28
+parmem3_2_tb.addr[5:0]
+@22
+parmem3_2_tb.stride[5:0]
+@24
+parmem3_2_tb.ben[7:0]
+@424
+parmem3_2_tb.benb[3:0]
+@30
+parmem3_2_tb.lane_en[1:0]
+@424
+parmem3_2_tb.errors
+@800200
+-colours
+@28
+[color] 1
+parmem3_2_tb.clka
+[color] 2
+parmem3_2_tb.clkb
+[color] 3
+parmem3_2_tb.en
+[color] 4
+parmem3_2_tb.wen
+[color] 5
+parmem3_2_tb.enb
+[color] 6
+parmem3_2_tb.web
+[color] 7
+parmem3_2_tb.freeze
+@1000200
+-colours
+@800200
+-outer
+@28
+parmem3_2_tb.conflict
+@800200
+-middle
+@28
+parmem3_2_tb.oob[1:0]
+@800200
+-inner
+@22
+parmem3_2_tb.dia[63:0]
+@1000200
+-inner
+-middle
+-outer
+[pattern_trace] 1
+[pattern_trace] 0
