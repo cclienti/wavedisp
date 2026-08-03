@@ -34,17 +34,31 @@ from pathlib import Path
 
 from wavedisp.ast import ASTBase, Block, Disp, Hierarchy
 from wavedisp.cli import TARGET_CLASSES, TARGET_NAMES, TARGETS, check_target_kwargs, decode_kwargs, make_target
+from wavedisp.dump import read_signals
 from wavedisp.targets import Target
 from wavedisp.targets.gtkwave import GTKWaveTarget
 from wavedisp.targets.surfer import SurferTarget
+
+#: A signal of the fixture dump: the save file target names its rows
+#: from one, and builds an empty view out of a description it cannot
+#: find there.
+DATA_DIR = Path(__file__).parent / "data"
 
 
 def tree():
     ASTBase.reset_unique_id()
     blk = Block()
-    blk.add(Hierarchy("/tb")).add(Disp("sig", height=32))
+    blk.add(Hierarchy("/dpmemrf_tb")).add(Disp("clka", height=32))
     blk.forward()
     return blk
+
+
+def build(name, logger, kwargs=None):
+    """Build a target, handing it a dump if it says it is given one."""
+
+    dump = read_signals(DATA_DIR / "dpmemrf_tb.fst") if "dump" in TARGETS[name].provided else None
+
+    return make_target(name, tree(), logger, kwargs if kwargs is not None else {}, dump)
 
 
 class TestMakeTarget(unittest.TestCase):
@@ -56,7 +70,7 @@ class TestMakeTarget(unittest.TestCase):
     def test_every_target_builds_with_no_argument(self):
         for name in TARGETS:
             with self.subTest(target=name):
-                self.assertIsNotNone(make_target(name, tree(), self.logger, {}))
+                self.assertIsNotNone(build(name, self.logger))
 
     def test_an_argument_reaches_the_target(self):
         target = make_target("surfer", tree(), self.logger, {"line_height": 8.0})
@@ -138,7 +152,7 @@ class TestTargetContract(unittest.TestCase):
     def test_a_target_leaves_its_file_in_genstr(self):
         for name in TARGETS:
             with self.subTest(target=name):
-                self.assertTrue(make_target(name, tree(), self.logger, {}).genstr)
+                self.assertTrue(build(name, self.logger).genstr)
 
 
 class TestTargetNames(unittest.TestCase):

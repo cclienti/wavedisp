@@ -30,6 +30,7 @@ from wavedisp.dump import DumpError, read_signals
 from wavedisp.dump.signals import canonical
 from wavedisp.targets import TargetOptionError
 from wavedisp.targets.gtkwave import GTKWaveTarget
+from wavedisp.targets.gtkwave_savefile import GTKWaveSaveFileTarget
 from wavedisp.targets.modelsim import ModelsimTarget
 from wavedisp.targets.rivierapro import RivieraProTarget
 from wavedisp.targets.surfer import SurferTarget
@@ -37,7 +38,7 @@ from wavedisp.targets.surfer import SurferTarget
 #: Targets that turn an AST into a file, by the name -t takes. "dot" is
 #: not here: it renders the AST itself rather than going through a
 #: target class.
-TARGET_CLASSES = (GTKWaveTarget, ModelsimTarget, RivieraProTarget, SurferTarget)
+TARGET_CLASSES = (GTKWaveTarget, GTKWaveSaveFileTarget, ModelsimTarget, RivieraProTarget, SurferTarget)
 
 #: Keyed by the name each target declares for itself, so that adding one
 #: is adding it here and nowhere else.
@@ -105,7 +106,7 @@ def check_target_kwargs(name, accepted, kwargs, logger):
     return False
 
 
-def make_target(name, tree, logger, kwargs):
+def make_target(name, tree, logger, kwargs, dump=None):
     """Instantiate the target ``name`` over ``tree``.
 
     ``kwargs`` is taken as a dictionary rather than as ``**kwargs``, so
@@ -113,6 +114,10 @@ def make_target(name, tree, logger, kwargs):
     "logger" is reported like any other unknown option instead of
     colliding with this function's own parameters.
 
+    :param dump: signals of the dump, for the targets that declare they
+        are given one. Refusing to build without it is the point: a
+        target that names its rows from a dump writes an empty view
+        rather than an error when it has none.
     :return: the target instance, or None if it could not be built.
 
     """
@@ -125,6 +130,12 @@ def make_target(name, tree, logger, kwargs):
 
     if not check_target_kwargs(name, target_class.options(), kwargs, logger):
         return None
+
+    if "dump" in target_class.provided:
+        if dump is None:
+            logger.error('target "%s" names its signals from a dump, so it needs -D/--dump', name)
+            return None
+        kwargs = dict(kwargs, dump=dump)
 
     try:
         return target_class(tree, **kwargs)
@@ -164,32 +175,39 @@ class LoggingLevelCounterHandler(logging.Handler):
         return 1 if self.level_counter.get("ERROR") else 0
 
 
-def check_signals(block, filename, logger):
-    """Report the signals of ``block`` that ``filename`` does not hold.
+def load_dump(filename, logger):
+    """Read the dump, once, for whatever this run does with it.
+
+    :return: its signals, or None if it could not be read.
+    """
+
+    try:
+        return read_signals(filename)
+    except (OSError, DumpError) as error:
+        logger.error('cannot read the dump "%s": %s', filename, error)
+        return None
+
+
+def check_signals(block, signals, logger):
+    """Report the signals of ``block`` the dump does not hold.
 
     The wave file is still generated: a signal missing from one dump may
     well be there in the next run, and the exit status already says the
     check failed.
 
     :param block: root of the AST, hierarchies already forwarded.
-    :param str filename: dump file to read the signal names from.
+    :param signals: signals of the dump.
     :param logger: logger to report on.
     """
 
-    try:
-        signals = read_signals(filename)
-    except (OSError, DumpError) as error:
-        logger.error('cannot read the dump "%s": %s', filename, error)
-        return
-
-    checker = SignalChecker(signals, filename)
+    checker = SignalChecker(signals, signals.filename)
     checker.visit(block)
 
     logger.info(
         'checked %i signals against the %i signals of "%s" (%s)',
         checker.checked,
         len(signals),
-        filename,
+        signals.filename,
         signals.format_name,
     )
 
@@ -329,8 +347,10 @@ def _run(args, parser, counter) -> int:
     block.include(args.input, **kwargs)
     block.forward()
 
-    if args.dump:
-        check_signals(block, args.dump, logger)
+    # Read once, whether it goes to the check, to the target, or to both.
+    dump = load_dump(args.dump, logger) if args.dump else None
+    if dump is not None:
+        check_signals(block, dump, logger)
 
     if args.target == "dot":
         # Rendered straight from the AST, with no target class to carry
@@ -341,11 +361,11 @@ def _run(args, parser, counter) -> int:
         fmod = open(args.output, "w")
         fmod.write(str(block.children[0]))
         fmod.close()
-        # Not a plain 0: a --check that found a missing signal has to
-        # fail this target like it fails the others.
+        # Not a plain 0: a check that found a missing signal has to fail
+        # this target like it fails the others.
         return counter.error_status()
 
-    target = make_target(args.target, block, logger, target_kwargs)
+    target = make_target(args.target, block, logger, target_kwargs, dump)
     if target is None:
         return 1
 
