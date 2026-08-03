@@ -772,4 +772,29 @@ X11_COLORS = {
     "yellow2": (238, 238, 0),
     "yellow3": (205, 205, 0),
     "yellow4": (139, 139, 0),
+    # Added to the X.Org rgb.txt after this table was first written:
+    # the HTML colour names, the Web/X11 disambiguation of the four
+    # names the two standards disagree on, and RebeccaPurple. Missing
+    # them made a description asking for one of them lose its colour --
+    # "indigo" among them, which is one of the seven GTKWave itself
+    # supports.
+    "RebeccaPurple": (102, 51, 153),
+    "WebGray": (128, 128, 128),
+    "WebGreen": (0, 128, 0),
+    "WebGrey": (128, 128, 128),
+    "WebMaroon": (128, 0, 0),
+    "WebPurple": (128, 0, 128),
+    "X11Gray": (190, 190, 190),
+    "X11Green": (0, 255, 0),
+    "X11Grey": (190, 190, 190),
+    "X11Maroon": (176, 48, 96),
+    "X11Purple": (160, 32, 240),
+    "aqua": (0, 255, 255),
+    "crimson": (220, 20, 60),
+    "fuchsia": (255, 0, 255),
+    "indigo": (75, 0, 130),
+    "lime": (0, 255, 0),
+    "olive": (128, 128, 0),
+    "silver": (192, 192, 192),
+    "teal": (0, 128, 128),
 }

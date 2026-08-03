@@ -23,6 +23,7 @@ import unittest
 
 from wavedisp.ast import ASTBase, Block, Disp, Divider, Group, Hierarchy
 from wavedisp.targets.gtkwave import GTKWaveTarget
+from wavedisp.targets.x11colors import X11_COLORS
 
 GTKWAVE_GENERATOR_REF = """# Wavedisp generated gtkwave file
 gtkwave::/Edit/Set_Trace_Max_Hier 0
@@ -163,6 +164,47 @@ gtkwave::/Edit/UnHighlight_All
 gtkwave::/Edit/UnHighlight_All
 gtkwave::/Edit/Set_Trace_Max_Hier 1
 """
+
+
+class TestX11Colors(unittest.TestCase):
+    """The colour names a description may use.
+
+    The table is the X.Org rgb.txt, and it was written before that file
+    gained the HTML colour names. A description asking for one of them
+    lost its colour, with an error -- "indigo" among them, which is one
+    of the seven GTKWave itself keeps and therefore one a user reaches
+    for naturally.
+    """
+
+    LATE_ADDITIONS = [
+        "aqua",
+        "crimson",
+        "fuchsia",
+        "indigo",
+        "lime",
+        "olive",
+        "silver",
+        "teal",
+        "RebeccaPurple",
+        "WebGray",
+        "WebGreen",
+        "WebGrey",
+        "WebMaroon",
+        "WebPurple",
+        "X11Gray",
+        "X11Green",
+        "X11Grey",
+        "X11Maroon",
+        "X11Purple",
+    ]
+
+    def test_they_are_all_known(self):
+        for name in self.LATE_ADDITIONS:
+            with self.subTest(color=name):
+                self.assertIn(name, X11_COLORS)
+
+    def test_indigo_reaches_the_colour_gtkwave_names_the_same(self):
+        self.assertEqual(GTKWaveTarget.nearest_color("indigo"), "Indigo")
 
 
 class TestGTKWaveTarget(unittest.TestCase):
