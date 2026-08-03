@@ -26,10 +26,14 @@ The first describes what to display, the second how to render it.
 """
 
 import logging
+import os
+import subprocess
+import sys
 import unittest
+from pathlib import Path
 
 from wavedisp.ast import ASTBase, Block, Disp, Hierarchy
-from wavedisp.cli import TARGETS, check_target_kwargs, decode_kwargs, make_target
+from wavedisp.cli import TARGET_NAMES, TARGETS, check_target_kwargs, decode_kwargs, make_target
 from wavedisp.targets.surfer import SurferTarget
 
 
@@ -95,6 +99,44 @@ class TestMakeTarget(unittest.TestCase):
     def test_an_unknown_target_is_refused(self):
         with self.assertLogs("test:cli", level="ERROR"):
             self.assertIsNone(make_target("nosuchviewer", tree(), self.logger, {}))
+
+
+class TestTargetNames(unittest.TestCase):
+    """What -t offers has to be what the program can build.
+
+    The list used to be spelled out in the help text beside the registry,
+    which is one place too many: a target added to TARGETS was buildable
+    and undocumented until someone remembered the sentence.
+    """
+
+    def test_every_registered_target_is_offered(self):
+        for name in TARGETS:
+            with self.subTest(target=name):
+                self.assertIn(name, TARGET_NAMES)
+
+    def test_the_ast_renderer_is_offered_too(self):
+        """dot has no target class, and is still something -t takes."""
+
+        self.assertIn("dot", TARGET_NAMES)
+
+    def test_nothing_else_is_offered(self):
+        self.assertEqual(set(TARGET_NAMES), set(TARGETS) | {"dot"})
+
+    def test_the_command_line_lists_them(self):
+        """argparse states the choices, so the help cannot drift again."""
+
+        environment = dict(os.environ, PYTHONPATH=str(Path(__file__).parent.parent))
+        result = subprocess.run(
+            [sys.executable, "-m", "wavedisp.cli", "--help"],
+            capture_output=True,
+            text=True,
+            env=environment,
+            check=False,
+        )
+
+        for name in TARGET_NAMES:
+            with self.subTest(target=name):
+                self.assertIn(name, result.stdout)
 
 
 class TestMalformedTargetKwargs(unittest.TestCase):
