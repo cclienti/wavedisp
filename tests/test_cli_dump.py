@@ -17,7 +17,7 @@
 #
 # Copyright (C) 2019 Christophe Clienti
 
-"""Test the --list-signals mode."""
+"""Test the listing a dump given without a description produces."""
 
 import os
 import subprocess
@@ -57,7 +57,7 @@ class TestListSignals(unittest.TestCase):
     def test_signals_are_listed(self):
         """Every signal of the dump is printed, one per line."""
 
-        result = self.run_cli("-l", str(DATA_DIR / "dpmemrf_tb.fst"))
+        result = self.run_cli("-D", str(DATA_DIR / "dpmemrf_tb.fst"))
         lines = result.stdout.splitlines()
 
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -72,7 +72,7 @@ class TestListSignals(unittest.TestCase):
         viewer expects in a path.
         """
 
-        result = self.run_cli("-l", str(DATA_DIR / "dpmemrf_tb.vcd"))
+        result = self.run_cli("-D", str(DATA_DIR / "dpmemrf_tb.vcd"))
 
         self.assertIn("dpmemrf_tb.doa[31:0]", result.stdout.splitlines())
         self.assertNotIn(" ", result.stdout)
@@ -88,7 +88,7 @@ class TestListSignals(unittest.TestCase):
             "parmem3_2_tb.vzt",
         ]:
             with self.subTest(filename=filename):
-                result = self.run_cli("-l", str(DATA_DIR / filename))
+                result = self.run_cli("-D", str(DATA_DIR / filename))
 
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertTrue(result.stdout.splitlines())
@@ -96,7 +96,7 @@ class TestListSignals(unittest.TestCase):
     def test_no_input_file_is_needed(self):
         """Listing takes neither a description nor an output file."""
 
-        result = self.run_cli("--list-signals", str(DATA_DIR / "dpmemrf_tb.lxt2"))
+        result = self.run_cli("--dump", str(DATA_DIR / "dpmemrf_tb.lxt2"))
 
         self.assertEqual(result.returncode, 0, result.stderr)
 
@@ -111,32 +111,36 @@ class TestListSignals(unittest.TestCase):
     def test_unreadable_dump_fails(self):
         """A dump that cannot be read fails, and prints no signal."""
 
-        result = self.run_cli("-l", str(DATA_DIR / "no_such_dump.fst"))
+        result = self.run_cli("-D", str(DATA_DIR / "no_such_dump.fst"))
 
         self.assertEqual(result.returncode, 1)
         self.assertEqual(result.stdout, "")
         self.assertIn("cannot read the dump", result.stderr)
 
-    def test_options_of_a_generation_run_are_refused(self):
-        """Listing next to -o, -c or a description is a mistake, not a mode.
+    def test_an_output_without_a_description_is_refused(self):
+        """A forgotten description must not turn into a listing run.
 
-        Accepting them would print the list and exit 0 having written no
-        wave file and run no check, which reads as a successful run.
+        Asking for an output file while there is nothing to render is
+        what that mistake looks like, and printing a signal list into it
+        would pass for a successful generation.
         """
 
-        dump = str(DATA_DIR / "dpmemrf_tb.fst")
+        result = self.run_cli("-D", str(DATA_DIR / "dpmemrf_tb.fst"), "-o", os.devnull)
 
-        for arguments in [
-            ("-l", dump, str(WAVE_FILE)),
-            ("-l", dump, "-o", os.devnull),
-            ("-l", dump, "-c", dump),
-        ]:
-            with self.subTest(arguments=arguments):
-                result = self.run_cli(*arguments)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("takes an input file", result.stderr)
+        self.assertEqual(result.stdout, "")
 
-                self.assertEqual(result.returncode, 2)
-                self.assertIn("takes no", result.stderr)
-                self.assertEqual(result.stdout, "")
+    def test_a_description_switches_back_to_generating(self):
+        """The same dump next to a description generates and checks."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "out.tcl"
+            result = self.run_cli("-D", str(DATA_DIR / "dpmemrf_tb.fst"), "-o", str(output), str(WAVE_FILE))
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout, "")
+            self.assertIn("gtkwave::addSignalsFromList", output.read_text())
 
 
 class TestExitStatus(unittest.TestCase):
@@ -159,9 +163,9 @@ class TestExitStatus(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output = str(Path(directory) / "out.tcl")
             failed = self.run_main(
-                str(WAVE_FILE), "-o", output, "-c", str(DATA_DIR / "dpmemrf_tb.fst"), "-a", '{"typo": true}'
+                str(WAVE_FILE), "-o", output, "-D", str(DATA_DIR / "dpmemrf_tb.fst"), "-a", '{"typo": true}'
             )
-            passed = self.run_main(str(WAVE_FILE), "-o", output, "-c", str(DATA_DIR / "dpmemrf_tb.fst"))
+            passed = self.run_main(str(WAVE_FILE), "-o", output, "-D", str(DATA_DIR / "dpmemrf_tb.fst"))
 
         self.assertEqual(failed, 1)
         self.assertEqual(passed, 0)
