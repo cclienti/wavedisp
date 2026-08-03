@@ -33,6 +33,7 @@ import zlib
 import lz4.block
 
 from ._util import DumpError, decompressing, read_cstring, read_varint
+from .signals import viewer_name
 
 # Section types, from fstapi.h.
 FST_BL_HIER = 4
@@ -46,6 +47,29 @@ FST_ST_GEN_ATTRBEGIN = 252
 FST_ST_GEN_ATTREND = 253
 FST_ST_VCD_SCOPE = 254
 FST_ST_VCD_UPSCOPE = 255
+
+#: Variable types a viewer holds as one value rather than as a bundle of
+#: bits, from the fstVarType enum: integers, reals, parameters, strings
+#: and the SystemVerilog widths. A writer still declares a bit range for
+#: them -- ``errors [31:0]`` -- and the viewer drops it, so a name kept
+#: as declared would name nothing.
+UNBUNDLED_TYPES = frozenset(
+    {
+        1,  # FST_VT_VCD_INTEGER
+        2,  # FST_VT_VCD_PARAMETER
+        3,  # FST_VT_VCD_REAL
+        4,  # FST_VT_VCD_REAL_PARAMETER
+        8,  # FST_VT_VCD_TIME
+        20,  # FST_VT_VCD_REALTIME
+        21,  # FST_VT_GEN_STRING
+        24,  # FST_VT_SV_INT
+        25,  # FST_VT_SV_SHORTINT
+        26,  # FST_VT_SV_LONGINT
+        27,  # FST_VT_SV_BYTE
+        28,  # FST_VT_SV_ENUM
+        29,  # FST_VT_SV_SHORTREAL
+    }
+)
 
 SECTION_HEADER_SIZE = 9  # type byte and length
 MAX_ZWRAPPER_DEPTH = 4
@@ -178,13 +202,17 @@ def _parse_hierarchy(data: bytes) -> list[str]:
             pass
 
         else:
-            # Variable: type byte already consumed, then direction, name,
-            # bit length and alias handle. An alias repeats a signal
-            # dumped elsewhere, under a name of its own, so it counts.
+            # Variable: the tag is its type, then direction, name, bit
+            # length and alias handle. An alias repeats a signal dumped
+            # elsewhere, under a name of its own, so it counts.
             position += 1  # direction
             name, position = read_cstring(data, position)
             _length, position = read_varint(data, position)
             _alias, position = read_varint(data, position)
+
+            if tag in UNBUNDLED_TYPES:
+                name = viewer_name(name)
+
             names.append(".".join([*scopes, name]))
 
     return names

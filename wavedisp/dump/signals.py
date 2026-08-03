@@ -51,6 +51,19 @@ def without_range(name: str) -> str:
     return BIT_RANGE.sub("", name)
 
 
+def viewer_name(declared: str) -> str:
+    """Return the name a viewer holds an unbundled value under.
+
+    An integer, a real, a parameter or a string is one value to a
+    viewer, not a bundle of bits, so it has no range in its name --
+    however the writer declared it, and writers do declare one:
+    ``$var integer 32 ! errors [31:0]``. Naming such a signal the way it
+    was declared names nothing at all.
+    """
+
+    return without_range(canonical(declared))
+
+
 def without_index(name: str) -> str:
     """Return ``name`` without its trailing bracketed part, if any.
 

@@ -20,8 +20,15 @@
 """Signal names of a VCD file."""
 
 from ._util import DumpError
+from .signals import viewer_name
 
 CHUNK_SIZE = 1 << 16
+
+#: Variable types a viewer holds as one value rather than as a bundle of
+#: bits. A writer declares a bit range for them all the same -- Icarus
+#: writes ``$var integer 32 ! errors [31:0]`` -- and the viewer drops it,
+#: so a name kept as declared would name nothing.
+UNBUNDLED_TYPES = frozenset({"integer", "parameter", "real", "realtime", "time", "string"})
 
 
 def _tokens(stream):
@@ -108,6 +115,8 @@ def read_signals(stream) -> list[str]:
             # $var <type> <width> <identifier> <reference> [<range>], where
             # the bit range is a word of its own for most writers.
             name = " ".join(arguments[3:])
+            if arguments[0] in UNBUNDLED_TYPES:
+                name = viewer_name(name)
             names.append(".".join([*scopes, name]))
             declared = True
 
