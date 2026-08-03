@@ -38,8 +38,7 @@ import math
 import re
 
 from ..ast import signal_path
-from ..visitor import Visitor
-from . import TargetOptionError
+from . import Target, TargetOptionError
 from .x11colors import X11_COLORS
 
 LOGGER = logging.getLogger("wavegen")
@@ -182,7 +181,7 @@ def height_scale(height, line_height, context):
     return f"{scale:.4f}".rstrip("0").rstrip(".")
 
 
-class SurferTarget(Visitor):
+class SurferTarget(Target):
     """Target for the Surfer viewer.
 
     :param tree: AST tree instance.
@@ -192,6 +191,8 @@ class SurferTarget(Visitor):
         ``layout.waveforms_line_height`` to something else.
 
     """
+
+    name = "surfer"
 
     RadixDict = {
         "binary": "Binary",

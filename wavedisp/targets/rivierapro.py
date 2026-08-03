@@ -21,14 +21,16 @@
 
 import logging
 
-from ..visitor import Visitor
+from . import Target
 from .x11colors import X11_COLORS
 
 LOGGER = logging.getLogger("wavegen")
 
 
-class RivieraProTarget(Visitor):
+class RivieraProTarget(Target):
     """Target for the RivieraPro viewer."""
+
+    name = "rivierapro"
 
     RadixDict = {
         "binary": "-binary",
