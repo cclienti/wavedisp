@@ -247,16 +247,26 @@ class GTKWaveSaveFileTarget(Target):
             spelling = self.dump.resolve(path)
 
             if spelling is None:
-                # Dropped rather than written out: a row the dump cannot
-                # bind is one GTKWave silently does not draw, where the
-                # error names the line that asked for it.
-                LOGGER.error(
-                    '%s:%i: signal "%s" not found in "%s"',
-                    tree.filename,
-                    tree.line,
-                    path,
-                    self.dump.filename or "the dump",
-                )
+                # Dropped rather than written out, and never widened to
+                # the signal the bits were taken from: a row that is not
+                # the one asked for is worse than a row GTKWave silently
+                # does not draw, and both are worth an error naming the
+                # line that asked for it.
+                if self.dump.selects(path):
+                    LOGGER.error(
+                        '%s:%i: a gtkwave save file cannot name the bits of a signal, and "%s" selects some',
+                        tree.filename,
+                        tree.line,
+                        path,
+                    )
+                else:
+                    LOGGER.error(
+                        '%s:%i: signal "%s" not found in "%s"',
+                        tree.filename,
+                        tree.line,
+                        path,
+                        self.dump.filename or "the dump",
+                    )
                 continue
 
             self.emit(self.trace_flags(tree), spelling, self.color_number(tree))

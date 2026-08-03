@@ -157,6 +157,85 @@ class TestListSignals(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("input file is required", result.stderr)
 
+    def test_an_output_is_required_to_render(self):
+        """Where it used to be a TypeError out of open(None)."""
+
+        result = self.run_cli("-D", str(DATA_DIR / "dpmemrf_tb.fst"), str(WAVE_FILE))
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("-o/--output is required", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
+    def test_the_options_of_a_generation_run_are_refused(self):
+        """Every one of them, not only -o.
+
+        A description forgotten on a command line that carries -t or -T
+        would otherwise print a signal list and exit 0, which reads as a
+        successful generation.
+        """
+
+        dump = str(DATA_DIR / "dpmemrf_tb.fst")
+
+        for option in (["-o", os.devnull], ["-t", "surfer"], ["-T", "{}"]):
+            with self.subTest(option=option[0]):
+                result = self.run_cli("-D", dump, *option)
+
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("takes an input file to render", result.stderr)
+                self.assertEqual(result.stdout, "")
+
+    def test_an_unreadable_dump_stops_the_run(self):
+        """And says so once, naming the dump rather than the option.
+
+        Carrying on had the save file target report the dump as missing,
+        contradicting the command line the user had just typed.
+        """
+
+        with tempfile.TemporaryDirectory() as directory:
+            result = self.run_cli(
+                "-t",
+                "gtkwave-savefile",
+                "-D",
+                str(DATA_DIR / "no_such_dump.fst"),
+                "-o",
+                str(Path(directory) / "out.gtkw"),
+                str(WAVE_FILE),
+            )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("cannot read the dump", result.stderr)
+        self.assertNotIn("needs -D/--dump", result.stderr)
+
+    def test_a_missing_signal_is_reported_once(self):
+        """The checker and the save file target both look them up."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            result = self.run_cli(
+                "-t",
+                "gtkwave-savefile",
+                "-D",
+                str(DATA_DIR / "dpmemrf_tb.fst"),
+                "-o",
+                str(Path(directory) / "out.gtkw"),
+                "-a",
+                '{"typo": true}',
+                str(WAVE_FILE),
+            )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(result.stderr.count("addrra"), 1)
+
+    def test_a_write_failure_is_reported_by_every_target(self):
+        """Including dot, which used to raise out of main()."""
+
+        for target in ["gtkwave", "dot"]:
+            with self.subTest(target=target):
+                result = self.run_cli("-t", target, "-o", "/nonexistent/dir/out", str(WAVE_FILE))
+
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("cannot write to", result.stderr)
+                self.assertNotIn("Traceback", result.stderr)
+
     def test_the_help_shows_both_uses_of_a_dump(self):
         """The two modes are what a help text has to make obvious.
 
@@ -240,3 +319,19 @@ class TestExitStatus(unittest.TestCase):
             status = self.run_main(str(WAVE_FILE), "-o", str(Path(directory) / "out.tcl"))
 
         self.assertEqual(status, 0)
+
+    def test_an_argument_error_returns_too(self):
+        """The class of error a script driving it is most likely to hit.
+
+        argparse reports it and exits; the status comes back like any
+        other, so the caller's remaining runs are not aborted by an
+        exception it was told it would not have to catch.
+        """
+
+        for arguments in (
+            ("-D", str(DATA_DIR / "dpmemrf_tb.fst"), "-o", os.devnull),
+            (str(WAVE_FILE),),
+            ("--nosuchoption",),
+        ):
+            with self.subTest(arguments=arguments):
+                self.assertEqual(self.run_main(*arguments), 2)
