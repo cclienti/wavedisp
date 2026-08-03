@@ -113,7 +113,7 @@ class TestSignalChecker(unittest.TestCase):
 
 
 class TestCommandLine(unittest.TestCase):
-    """Test the --check option end to end."""
+    """Test the check performed when a dump is given, end to end."""
 
     def run_cli(self, output, *arguments):
         """Run the command line interface on the fixture wave file."""
@@ -132,7 +132,7 @@ class TestCommandLine(unittest.TestCase):
         """A wave file whose signals are all dumped exits successfully."""
 
         with tempfile.TemporaryDirectory() as directory:
-            result = self.run_cli(Path(directory) / "out.tcl", "-c", str(DATA_DIR / "dpmemrf_tb.fst"))
+            result = self.run_cli(Path(directory) / "out.tcl", "-D", str(DATA_DIR / "dpmemrf_tb.fst"))
 
         self.assertEqual(result.returncode, 0, result.stderr)
 
@@ -143,7 +143,7 @@ class TestCommandLine(unittest.TestCase):
             output = Path(directory) / "out.tcl"
             result = self.run_cli(
                 output,
-                "-c",
+                "-D",
                 str(DATA_DIR / "dpmemrf_tb.lxt2"),
                 "-a",
                 '{"typo": true}',
@@ -168,7 +168,7 @@ class TestCommandLine(unittest.TestCase):
                 Path(directory) / "out.dot",
                 "-t",
                 "dot",
-                "-c",
+                "-D",
                 str(DATA_DIR / "dpmemrf_tb.fst"),
                 "-a",
                 '{"typo": true}',
@@ -181,7 +181,7 @@ class TestCommandLine(unittest.TestCase):
         """A dump that cannot be read is an error of its own."""
 
         with tempfile.TemporaryDirectory() as directory:
-            result = self.run_cli(Path(directory) / "out.tcl", "-c", str(DATA_DIR / "no_such_dump.fst"))
+            result = self.run_cli(Path(directory) / "out.tcl", "-D", str(DATA_DIR / "no_such_dump.fst"))
 
         self.assertEqual(result.returncode, 1)
         self.assertIn("cannot read the dump", result.stderr)

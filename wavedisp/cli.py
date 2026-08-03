@@ -235,9 +235,9 @@ def main() -> int:
     description = "Wavedisp, the waveforms file generator"
     parser = argparse.ArgumentParser(description=description, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    # Optional because --list-signals reads a dump and writes no wave
-    # file, so it has no description to start from.
-    parser.add_argument("input", nargs="?", help="input file")
+    # Optional: a run given a dump and no description has nothing to
+    # render, and lists what the dump holds instead.
+    parser.add_argument("input", nargs="?", help="input file, omitted to list the signals of the dump")
     parser.add_argument("-o", "--output", help="output filename")
 
     parser.add_argument(
@@ -256,21 +256,13 @@ def main() -> int:
     parser.add_argument("-a", "--kwargs", default="{}", help="arguments dictionary for the generator function in json")
     parser.add_argument("-T", "--target-kwargs", default="{}", help="arguments dictionary for the target in json")
     parser.add_argument(
-        "-c",
-        "--check",
+        "-D",
+        "--dump",
         help=(
-            "dump file the declared signals must be found in, "
-            "in the vcd, fst, lxt, lxt2 or vzt format; a signal that is "
-            "missing from it is reported as an error"
-        ),
-    )
-    parser.add_argument(
-        "-l",
-        "--list-signals",
-        metavar="DUMP",
-        help=(
-            "print the signals a dump file holds, one path per line, and "
-            "exit; takes no input file and writes no waveforms file"
+            "simulation dump in the vcd, fst, lxt, lxt2 or vzt format; "
+            "the declared signals are checked against it and a missing "
+            "one is reported as an error, and with no input file its "
+            "signals are printed instead, one path per line"
         ),
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="verbose mode")
@@ -310,24 +302,17 @@ def _run(args, parser, counter) -> int:
 
     logger = logging.getLogger("wavegen:cli")
 
-    if args.list_signals:
-        # Refused rather than ignored: -l next to the options of a
-        # generation run means one of the two was not what the user
-        # meant, and a run that prints a list and silently writes no
-        # wave file looks like a success.
-        generation_options = (
-            ("an input file", args.input),
-            ("-o/--output", args.output),
-            ("-c/--check", args.check),
-        )
-        unusable = [option for option, value in generation_options if value]
-        if unusable:
-            parser.error(f"-l/--list-signals reads a dump and writes nothing, so it takes no {', no '.join(unusable)}")
-
-        return print_dump_signals(args.list_signals, logger)
-
     if args.input is None:
-        parser.error("an input file is required, unless -l/--list-signals is given")
+        if args.dump is None:
+            parser.error("an input file is required, unless -D/--dump is given on its own to list its signals")
+
+        # An output file asked for with nothing to render is the shape a
+        # forgotten description takes, and printing a signal list where a
+        # wave file was expected would pass for a successful run.
+        if args.output:
+            parser.error("-o/--output takes an input file to render; the signals of a dump are printed on the output")
+
+        return print_dump_signals(args.dump, logger)
 
     # -a goes to the generator function in the input file, -T to the
     # target class: one parameterises the description, the other how it
@@ -344,8 +329,8 @@ def _run(args, parser, counter) -> int:
     block.include(args.input, **kwargs)
     block.forward()
 
-    if args.check:
-        check_signals(block, args.check, logger)
+    if args.dump:
+        check_signals(block, args.dump, logger)
 
     if args.target == "dot":
         # Rendered straight from the AST, with no target class to carry

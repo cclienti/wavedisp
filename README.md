@@ -245,22 +245,23 @@ wavedisp -g post_synth_generator -o out.tcl parmem_tb.wave.py
 ## Command line
 
 ```
-wavedisp [-h] [-o OUTPUT] [-t TARGET] [-g GENERATOR] [-a KWARGS] [-T TARGET_KWARGS] [-c CHECK] [-l DUMP] [-v] [-d]
-         [input]
+wavedisp [-h] [-o OUTPUT] [-t TARGET] [-g GENERATOR] [-a KWARGS] [-T TARGET_KWARGS] [-D DUMP] [-v] [-d] [input]
 ```
 
 | Option | Meaning |
 | --- | --- |
-| `input` | the description file — not needed with `-l` |
+| `input` | the description file — omitted to list what `-D` holds |
 | `-o`, `--output` | output filename |
 | `-t`, `--target` | `gtkwave` (default), `modelsim`, `rivierapro`, `surfer`, `dot` |
 | `-g`, `--generator` | name of the generator function (default `generator`) |
 | `-a`, `--kwargs` | JSON object passed to the **generator function** |
 | `-T`, `--target-kwargs` | JSON object passed to the **target** |
-| `-c`, `--check` | dump the declared signals must be found in — see [Checking a description](#checking-a-description) |
-| `-l`, `--list-signals` | print the signals a dump holds and exit — see [Listing what a dump holds](#listing-what-a-dump-holds) |
+| `-D`, `--dump` | the simulation dump — see [Checking a description](#checking-a-description) |
 | `-v`, `--verbose` | log every file included and the generator used for it |
 | `-d`, `--debug` | more of the same |
+
+`-D` does one of two things, depending on whether there is anything to render. With a description it is what the
+declared signals are checked against; on its own it is what gets listed.
 
 `-a` and `-T` are easy to confuse, and they reach different places: `-a` parameterises *what* is described, `-T` *how*
 it is rendered. An option the selected target does not take is reported and exits non-zero rather than being silently
@@ -385,7 +386,7 @@ Nothing generates a description from the RTL, so a renamed port leaves a signal 
 viewer, and nothing else to say so. Pass a dump of the run and every declared signal is looked up in it:
 
 ```sh
-wavedisp -t gtkwave -o tb.tcl --check tb.fst tb.wave.py
+wavedisp -t gtkwave -o tb.tcl -D tb.fst tb.wave.py
 ```
 
 ```
@@ -412,7 +413,7 @@ The other direction, for when the question is what the design is even called —
 is anyone's guess, or the instance path a signal ended up under:
 
 ```sh
-wavedisp -l tb.fst
+wavedisp -D tb.fst
 ```
 
 ```
@@ -425,12 +426,13 @@ One path per line, in declaration order, spelled the way a `Disp` wants them —
 as it stands, bit range included. Sorting, filtering and counting are what the shell is for:
 
 ```sh
-wavedisp -l tb.fst | grep fifo_inst
-wavedisp -l tb.fst | wc -l
+wavedisp -D tb.fst | grep fifo_inst
+wavedisp -D tb.fst | wc -l
 ```
 
-This mode takes no description and writes no save file: `input`, `-o` and `-c` are not left out but refused, a run
-that printed a list and quietly wrote nothing else being indistinguishable from a successful generation.
+The mode is chosen by what is there to render: a `-D` with no description lists, a `-D` next to one checks. An
+`-o` without a description is refused rather than filled with the list, a forgotten description being exactly
+what that looks like.
 
 The `dot` target renders the tree wavedisp built, which is the quickest way to see what a parameterised description
 actually produced:
