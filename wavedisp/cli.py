@@ -20,7 +20,6 @@
 """Command line interface."""
 
 import argparse
-import inspect
 import json
 import logging
 import sys
@@ -38,12 +37,11 @@ from wavedisp.targets.surfer import SurferTarget
 #: Targets that turn an AST into a file, by the name -t takes. "dot" is
 #: not here: it renders the AST itself rather than going through a
 #: target class.
-TARGETS = {
-    "gtkwave": GTKWaveTarget,
-    "modelsim": ModelsimTarget,
-    "rivierapro": RivieraProTarget,
-    "surfer": SurferTarget,
-}
+TARGET_CLASSES = (GTKWaveTarget, ModelsimTarget, RivieraProTarget, SurferTarget)
+
+#: Keyed by the name each target declares for itself, so that adding one
+#: is adding it here and nowhere else.
+TARGETS = {target.name: target for target in TARGET_CLASSES}
 
 #: What -t accepts, the registry above plus the AST renderer. Derived
 #: rather than written out, so that a target added to TARGETS is offered
@@ -125,8 +123,7 @@ def make_target(name, tree, logger, kwargs):
         logger.error('target "%s" not supported', name)
         return None
 
-    parameters = inspect.signature(target_class.__init__).parameters
-    if not check_target_kwargs(name, set(parameters) - {"self", "tree"}, kwargs, logger):
+    if not check_target_kwargs(name, target_class.options(), kwargs, logger):
         return None
 
     try:

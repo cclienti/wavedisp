@@ -21,14 +21,16 @@
 
 import logging
 
-from ..visitor import Visitor
+from . import Target
 from .x11colors import X11_COLORS
 
 LOGGER = logging.getLogger("wavegen")
 
 
-class ModelsimTarget(Visitor):
+class ModelsimTarget(Target):
     """Target for the Modelsim viewer."""
+
+    name = "modelsim"
 
     RadixDict = {
         "binary": "binary",

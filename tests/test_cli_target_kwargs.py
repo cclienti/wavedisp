@@ -33,7 +33,9 @@ import unittest
 from pathlib import Path
 
 from wavedisp.ast import ASTBase, Block, Disp, Hierarchy
-from wavedisp.cli import TARGET_NAMES, TARGETS, check_target_kwargs, decode_kwargs, make_target
+from wavedisp.cli import TARGET_CLASSES, TARGET_NAMES, TARGETS, check_target_kwargs, decode_kwargs, make_target
+from wavedisp.targets import Target
+from wavedisp.targets.gtkwave import GTKWaveTarget
 from wavedisp.targets.surfer import SurferTarget
 
 
@@ -99,6 +101,44 @@ class TestMakeTarget(unittest.TestCase):
     def test_an_unknown_target_is_refused(self):
         with self.assertLogs("test:cli", level="ERROR"):
             self.assertIsNone(make_target("nosuchviewer", tree(), self.logger, {}))
+
+
+class TestTargetContract(unittest.TestCase):
+    """What a target has to declare to be one.
+
+    The three things the command line reads off a target used to be read
+    from somewhere else: its name from a dictionary written by hand, its
+    options from the signature of its own ``__init__``, its result from
+    an attribute the targets happened to agree on.
+    """
+
+    def setUp(self):
+        self.logger = logging.getLogger("test:cli")
+
+    def test_every_target_is_one(self):
+        for target in TARGET_CLASSES:
+            with self.subTest(target=target.__name__):
+                self.assertTrue(issubclass(target, Target))
+
+    def test_every_target_declares_its_name(self):
+        for target in TARGET_CLASSES:
+            with self.subTest(target=target.__name__):
+                self.assertTrue(target.name)
+
+    def test_the_registry_is_keyed_by_that_name(self):
+        """No second spelling of a name to keep in step with the first."""
+
+        self.assertEqual(TARGETS, {target.name: target for target in TARGET_CLASSES})
+        self.assertEqual(len(TARGETS), len(TARGET_CLASSES))
+
+    def test_the_options_are_the_ones_the_target_takes(self):
+        self.assertEqual(SurferTarget.options(), {"line_height"})
+        self.assertEqual(GTKWaveTarget.options(), set())
+
+    def test_a_target_leaves_its_file_in_genstr(self):
+        for name in TARGETS:
+            with self.subTest(target=name):
+                self.assertTrue(make_target(name, tree(), self.logger, {}).genstr)
 
 
 class TestTargetNames(unittest.TestCase):
@@ -197,7 +237,9 @@ class TestDecodeKwargs(unittest.TestCase):
         a fault raised anywhere in the traversal.
         """
 
-        class Exploding:
+        class Exploding(Target):
+            name = "exploding"
+
             def __init__(self, tree):
                 raise ValueError("boom from deep inside generation")
 

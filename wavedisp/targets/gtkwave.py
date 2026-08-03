@@ -22,7 +22,7 @@
 import logging
 
 from ..ast import signal_path
-from ..visitor import Visitor
+from . import Target
 from .x11colors import X11_COLORS
 
 LOGGER = logging.getLogger("wavegen")
@@ -82,8 +82,10 @@ def highlight_added(var):
     )
 
 
-class GTKWaveTarget(Visitor):
+class GTKWaveTarget(Target):
     """Target for the GTKWave viewer."""
+
+    name = "gtkwave"
 
     RadixDict = {
         "binary": "Binary",
