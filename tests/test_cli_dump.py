@@ -38,21 +38,70 @@ WAVE_FILE = DATA_DIR / "dpmemrf_tb.wave.py"
 DPMEMRF_SIGNALS = 109
 
 
+def run_cli(*arguments, cwd=None):
+    """Run the command line interface, optionally from elsewhere."""
+
+    environment = dict(os.environ, PYTHONPATH=str(ROOT_DIR))
+
+    return subprocess.run(
+        [sys.executable, "-m", "wavedisp.cli", *arguments],
+        capture_output=True,
+        text=True,
+        env=environment,
+        cwd=cwd,
+        check=False,
+    )
+
+
+class TestRelativePaths(unittest.TestCase):
+    """A description named by a path with a directory in it.
+
+    include() resolves a relative path against the directory of the file
+    doing the including, which is what a description including another
+    needs. The command line was handing it the input as typed, whose
+    "including file" is that very path, so "data/tb.wave.py" was looked
+    for under "data/data/" and reported missing -- every invocation from
+    a project directory, in other words.
+    """
+
+    def test_a_relative_input_is_read(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = run_cli(
+                "-o",
+                str(Path(directory) / "out.tcl"),
+                "data/dpmemrf_tb.wave.py",
+                cwd=str(DATA_DIR.parent),
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("addSignalsFromList", (Path(directory) / "out.tcl").read_text())
+
+    def test_a_relative_input_and_a_relative_dump(self):
+        """The dump is opened from the working directory, as any file."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            result = run_cli(
+                "-t",
+                "gtkwave-savefile",
+                "-D",
+                "data/dpmemrf_tb.fst",
+                "-o",
+                str(Path(directory) / "out.gtkw"),
+                "data/dpmemrf_tb.wave.py",
+                cwd=str(DATA_DIR.parent),
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("dpmemrf_tb.doa[31:0]", (Path(directory) / "out.gtkw").read_text())
+
+
 class TestListSignals(unittest.TestCase):
     """Test listing the signals of a dump from the command line."""
 
     def run_cli(self, *arguments):
         """Run the command line interface."""
 
-        environment = dict(os.environ, PYTHONPATH=str(ROOT_DIR))
-
-        return subprocess.run(
-            [sys.executable, "-m", "wavedisp.cli", *arguments],
-            capture_output=True,
-            text=True,
-            env=environment,
-            check=False,
-        )
+        return run_cli(*arguments)
 
     def test_signals_are_listed(self):
         """Every signal of the dump is printed, one per line."""

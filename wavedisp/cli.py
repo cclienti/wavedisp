@@ -22,6 +22,7 @@
 import argparse
 import json
 import logging
+import os
 import sys
 
 from wavedisp.ast import Block
@@ -390,8 +391,17 @@ def _run(args, parser, counter) -> int:
 
     kwargs["__generator"] = args.generator
 
-    block = Block(__filename=args.input, __line=0)
-    block.include(args.input, **kwargs)
+    # Resolved against the working directory before being handed over,
+    # because include() resolves a relative path against the directory
+    # of the file doing the including -- right for a description
+    # including another, wrong for this one, whose "including file" is
+    # the very path being included. A relative input naming a directory
+    # was looked for under itself: "project/tb.wave.py" was opened as
+    # "project/project/tb.wave.py" and reported missing.
+    input_file = os.path.abspath(args.input)
+
+    block = Block(__filename=input_file, __line=0)
+    block.include(input_file, **kwargs)
     block.forward()
 
     # Read once, whether it goes to the check, to the target, or to both.
