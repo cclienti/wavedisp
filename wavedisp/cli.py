@@ -45,6 +45,11 @@ TARGETS = {
     "surfer": SurferTarget,
 }
 
+#: What -t accepts, the registry above plus the AST renderer. Derived
+#: rather than written out, so that a target added to TARGETS is offered
+#: and validated without a second list having to be remembered.
+TARGET_NAMES = [*sorted(TARGETS), "dot"]
+
 
 def decode_kwargs(text, option, logger):
     """Decode one of the json dictionaries the command line takes.
@@ -245,10 +250,8 @@ def main() -> int:
         "--target",
         type=str,
         default="gtkwave",
-        help=(
-            "targeted simulator for the generated waveforms file, "
-            "available targets: gtkwave, modelsim, rivierapro, surfer and dot (graphviz)"
-        ),
+        choices=TARGET_NAMES,
+        help="targeted viewer for the generated waveforms file; dot renders the AST itself, for graphviz",
     )
     parser.add_argument(
         "-g", "--generator", type=str, default="generator", help="generator function name in the input file"
