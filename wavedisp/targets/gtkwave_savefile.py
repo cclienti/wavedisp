@@ -50,6 +50,15 @@ and saved back from it, and the two agree on every row, in order, groups
 and dividers included. That round trip is what caught the one row that
 did not bind -- see ``viewer_name`` in the dump package.
 
+The same way round answers what the dump is really needed for, which is
+worth knowing before anyone tries to make it optional. A copy of that
+file with the bit range taken off its rows was loaded and saved back:
+of the sixteen rows offered, GTKWave kept nine and dropped exactly the
+seven buses. What survived is what has no range to carry -- the scalars
+and the integer -- and two groups came back empty, their only contents
+having been buses. A bus named ``tb.dut.dia`` binds to nothing, in
+silence, and only the dump knows it is ``tb.dut.dia[63:0]``.
+
 Where a description sets no radix this target writes none, and GTKWave
 fills in its own on load: binary for a scalar, hexadecimal for a bus,
 signed decimal for an integer. Stating one here would only overrule the
