@@ -21,7 +21,7 @@
 
 import logging
 
-from . import Target
+from . import Target, tcl_word
 from .x11colors import X11_COLORS
 
 LOGGER = logging.getLogger("wavegen")
@@ -31,6 +31,14 @@ class RivieraProTarget(Target):
     """Target for the RivieraPro viewer."""
 
     name = "rivierapro"
+
+    @staticmethod
+    def native_wildcard(value, exclude):
+        """``add wave`` takes ``*`` and ``?`` within one region itself.
+        ``**`` and exclusions would take a loop, which the single
+        ``add wave -vgroup`` command a group is written as cannot hold."""
+
+        return "**" not in value and not exclude
 
     RadixDict = {
         "binary": "-binary",
@@ -139,7 +147,7 @@ class RivieraProTarget(Target):
                 if height != "":
                     disp_line += f"-height {height} "
 
-            disp_line += f"{{{tree.hierarchy}/{value}}}"
+            disp_line += f"{tcl_word(f'{tree.hierarchy}/{value}')}"
 
             if self.stack:
                 self.stack[-1].append(disp_line)

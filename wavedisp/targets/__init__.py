@@ -24,6 +24,37 @@ import inspect
 from ..visitor import Visitor
 
 
+def tcl_word(text):
+    """Quote ``text`` so a TCL viewer receives it as one word.
+
+    Names reach the script straight from the user's ``.wave.py``: group
+    titles, divider text, signal paths. Interpolating them raw into
+    ``{...}`` works until one of them carries a brace, and then the
+    braced word ends early -- which now truncates the enclosing ``if``
+    block and silently drops the group creation with it, not just the one
+    command.
+
+    Braces are kept when they are safe, since that is the ordinary case
+    and the generated script is meant to be readable. A string is safe
+    when its braces are balanced and it holds no backslash, a backslash
+    being able to escape the closing brace. Anything else is emitted as a
+    backslash-escaped bare word.
+    """
+    depth = 0
+    for char in text:
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth < 0:
+                break
+    else:
+        if depth == 0 and "\\" not in text:
+            return "{" + text + "}"
+
+    return "".join("\\" + c if c in ' \t\n\\$[]{}";' else c for c in text)
+
+
 class Target(Visitor):
     """Base of every target.
 
@@ -59,6 +90,17 @@ class Target(Visitor):
     #: signals from. They are not options, and --target-kwargs may
     #: neither pass nor be told about them.
     provided: tuple[str, ...] = ()
+
+    @staticmethod
+    def native_wildcard(value: str, exclude: list[str]) -> bool:
+        """Say whether the viewer expands the Disp wildcard ``value``
+        itself, when it loads the dump. One that does is handed it as
+        written when there is no dump to expand it against beforehand.
+
+        :param exclude: what the Disp excludes from its wildcards.
+        """
+
+        return False
 
     @classmethod
     def options(cls) -> set[str]:

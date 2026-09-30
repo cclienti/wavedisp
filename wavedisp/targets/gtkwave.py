@@ -22,41 +22,11 @@
 import logging
 
 from ..ast import signal_path
-from . import Target
+from ..checker import is_pattern, pattern_regex
+from . import Target, tcl_word
 from .x11colors import X11_COLORS
 
 LOGGER = logging.getLogger("wavegen")
-
-
-def tcl_word(text):
-    """Quote ``text`` so gtkwave receives it as one TCL word.
-
-    Names reach the script straight from the user's ``.wave.py``: group
-    titles, divider text, signal paths. Interpolating them raw into
-    ``{...}`` works until one of them carries a brace, and then the
-    braced word ends early -- which now truncates the enclosing ``if``
-    block and silently drops the group creation with it, not just the one
-    command.
-
-    Braces are kept when they are safe, since that is the ordinary case
-    and the generated script is meant to be readable. A string is safe
-    when its braces are balanced and it holds no backslash, a backslash
-    being able to escape the closing brace. Anything else is emitted as a
-    backslash-escaped bare word.
-    """
-    depth = 0
-    for char in text:
-        if char == "{":
-            depth += 1
-        elif char == "}":
-            depth -= 1
-            if depth < 0:
-                break
-    else:
-        if depth == 0 and "\\" not in text:
-            return "{" + text + "}"
-
-    return "".join("\\" + c if c in ' \t\n\\$[]{}";' else c for c in text)
 
 
 def highlight_added(var):
@@ -82,10 +52,47 @@ def highlight_added(var):
     )
 
 
+def add_matching(hierarchy, value, exclude):
+    """Add every facility a Disp wildcard matches, when gtkwave loads.
+
+    gtkwave has no wildcard add of its own, but it lists its facilities,
+    so the script walks them and keeps the ones matching the regex the
+    dump would have been matched with, less the ones ``exclude``
+    matches. Facility names carry the bit range, which the regexes allow
+    for rather than demand. They come in gtkwave's own order, which is
+    sorted by name, where a wildcard expanded against the dump keeps the
+    order it declares them in. A wildcard matching nothing is said so on
+    gtkwave's standard error, there being nothing to say it earlier.
+    """
+
+    def matches(pattern):
+        regex = f"^{pattern_regex(hierarchy, pattern)}(\\[-?[0-9]+:-?[0-9]+\\])?$"
+        return f"[regexp {tcl_word(regex)} .$wd_name]"
+
+    test = " && ".join([matches(value), *(f"!{matches(name)}" for name in exclude)])
+    warning = f"wavedisp: wildcard {signal_path(hierarchy, value)} matches no signal"
+
+    return (
+        "set wd_names {}\n"
+        "for {set wd_f 0} {$wd_f < [gtkwave::getNumFacs]} {incr wd_f} {\n"
+        "    set wd_name [gtkwave::getFacName $wd_f]\n"
+        f"    if {{{test}}} {{lappend wd_names $wd_name}}\n"
+        "}\n"
+        f"if {{![llength $wd_names]}} {{puts stderr {tcl_word(warning)}}}\n"
+        "gtkwave::addSignalsFromList $wd_names\n"
+    )
+
+
 class GTKWaveTarget(Target):
     """Target for the GTKWave viewer."""
 
     name = "gtkwave"
+
+    @staticmethod
+    def native_wildcard(value, exclude):
+        """Expanded by the script itself, see ``add_matching``."""
+
+        return True
 
     RadixDict = {
         "binary": "Binary",
@@ -211,7 +218,10 @@ class GTKWaveTarget(Target):
             tagged = bool(tree.properties.get("radix") or tree.properties.get("color"))
             if tagged:
                 self.genstr += "set wd_sig [gtkwave::getTotalNumTraces]\n"
-            self.genstr += f"gtkwave::addSignalsFromList [list {tcl_word(fullname)}]\n"
+            if is_pattern(value):
+                self.genstr += add_matching(tree.hierarchy, value, tree.exclude)
+            else:
+                self.genstr += f"gtkwave::addSignalsFromList [list {tcl_word(fullname)}]\n"
 
             if "radix" in tree.properties:
                 radix = tree.properties["radix"]
