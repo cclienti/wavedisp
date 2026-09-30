@@ -26,7 +26,7 @@ import os
 import sys
 
 from wavedisp.ast import Block
-from wavedisp.checker import SignalChecker
+from wavedisp.checker import SignalChecker, WildcardExpander
 from wavedisp.dump import DumpError, read_signals
 from wavedisp.dump.signals import canonical
 from wavedisp.targets import Target, TargetOptionError
@@ -350,7 +350,8 @@ def main() -> int:
         help=(
             "simulation dump in the vcd, fst, lxt, lxt2 or vzt format; "
             "the declared signals are checked against it and a missing "
-            "one is reported as an error, and with no input file its "
+            "one is reported as an error, Disp wildcards are expanded "
+            "against it, and with no input file its "
             "signals are printed instead, one path per line"
         ),
     )
@@ -462,6 +463,15 @@ def _run(args, parser, counter) -> int:
         if dump is None:
             return 1
 
+    # Before the check and the target, both of which take a value for a
+    # name and would report a wildcard as a signal the dump lacks. With
+    # no dump, a viewer that expands wildcards itself is handed them as
+    # written -- its script is often generated before the run that
+    # produces the dump -- and the AST renderer shows them as written.
+    native = (lambda value, exclude: True) if target_name == "dot" else TARGETS.get(target_name, Target).native_wildcard
+    WildcardExpander(dump, native=native).visit(block)
+
+    if dump is not None:
         # Skipped for a target that resolves its own names: it reports
         # the same signals against the same lines, and the two together
         # printed every error twice.

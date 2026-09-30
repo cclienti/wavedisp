@@ -409,12 +409,15 @@ class Disp(ASTLeaf):
        * *radix*: Radix to display ('hexadecimal', 'decimal', 'octal', 'binary')
        * *color*: Color string
        * *height*: Height of the row
+       * *exclude*: name or list of names, wildcards allowed, that the
+         wildcards of this Disp must not add
 
     """
 
-    def __init__(self, sig_names, **kwargs):
+    def __init__(self, sig_names, exclude=None, **kwargs):
         super().__init__(__caller_level=3, **kwargs)
         if isinstance(sig_names, list):
             self.value += sig_names
         else:
             self.value += [sig_names]
+        self.exclude = [exclude] if isinstance(exclude, str) else list(exclude or [])

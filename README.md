@@ -85,6 +85,34 @@ A name may carry a path of its own, which saves declaring a `Hierarchy` for a si
 dut.add(Disp('fifo_inst/write_ptr'))
 ```
 
+A name may also be a wildcard: `*` for any run of characters and `?` for one, both within one scope the way
+`add wave /tb/dut/*` works, and a `**` level for any number of scopes. `exclude` takes back some of what the
+wildcards of that `Disp` add, in the same syntax:
+
+```python
+dut.add(Disp('*', radix='binary'))              # every signal of dut, none of its sub-instances
+dut.add(Disp('wr_*'))
+dut.add(Disp('**/valid'))                       # valid in dut and in every scope below it
+dut.add(Disp('*', exclude=['mem*', '*_dbg']))
+```
+
+Given `-D`, wavedisp expands wildcards against the dump, for every target, and the signals come in the order the dump
+declares them. Names are quoted into the viewer script whatever they carry; one with a line break or another control character, which no
+quoting keeps inside a script word, is reported and left out.
+
+Without a dump, a target whose viewer can expand a wildcard is handed it, and it is expanded when the viewer loads the
+dump. That is what a script generated before the simulation runs needs:
+
+| | `*`, `?` | `**`, `exclude` |
+| --- | --- | --- |
+| `gtkwave` | expanded by the script, sorted by name | same |
+| `modelsim` | `add wave` expands it | expanded by the script, through `find signals` |
+| `rivierapro` | `add wave` expands it | requires `-D` |
+| `surfer`, `gtkwave-savefile` | requires `-D` | requires `-D` |
+
+A wildcard matching nothing is reported like a missing signal with `-D`, and by the viewer's own console otherwise. A
+wildcard in a `Hierarchy` is an error: only a `Disp` name may be one.
+
 ### Scopes
 
 `Hierarchy` sets the instance path its children are resolved against. Nesting them concatenates:
