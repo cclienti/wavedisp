@@ -147,7 +147,7 @@ class RivieraProTarget(Target):
                 if height != "":
                     disp_line += f"-height {height} "
 
-            disp_line += f"{tcl_word(f'{tree.hierarchy}/{value}')}"
+            disp_line += f"{tcl_word(tree.path(value, sep='/'))}"
 
             if self.stack:
                 self.stack[-1].append(disp_line)

@@ -22,7 +22,7 @@
 import logging
 
 from ..ast import signal_path
-from ..checker import is_pattern, pattern_regex
+from ..checker import pattern_regex
 from . import Target, tcl_word
 from .x11colors import X11_COLORS
 
@@ -209,7 +209,7 @@ class GTKWaveTarget(Target):
         """
 
         for value in tree.value:
-            fullname = signal_path(tree.hierarchy, value)
+            fullname = tree.path(value)
 
             # Properties apply to whatever this add produced -- nothing at
             # all if the signal is absent from the dump, which is why the
@@ -218,7 +218,7 @@ class GTKWaveTarget(Target):
             tagged = bool(tree.properties.get("radix") or tree.properties.get("color"))
             if tagged:
                 self.genstr += "set wd_sig [gtkwave::getTotalNumTraces]\n"
-            if is_pattern(value):
+            if tree.is_wildcard(value):
                 self.genstr += add_matching(tree.hierarchy, value, tree.exclude)
             else:
                 self.genstr += f"gtkwave::addSignalsFromList [list {tcl_word(fullname)}]\n"

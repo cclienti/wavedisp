@@ -22,7 +22,7 @@
 import logging
 
 from ..ast import signal_path
-from ..checker import is_pattern, pattern_regex
+from ..checker import pattern_regex
 from . import Target, tcl_word
 from .x11colors import X11_COLORS
 
@@ -135,9 +135,9 @@ class ModelsimTarget(Target):
             for group in self.state["group"]:
                 options += f"-group {{{group}}} "
 
-            if is_pattern(value) and ("**" in value or tree.exclude):
+            if tree.is_wildcard(value) and ("**" in value or tree.exclude):
                 self.genstr += find_matching(tree.hierarchy, value, tree.exclude, options)
             else:
-                self.genstr += f"add wave {options}{tcl_word(f'{tree.hierarchy}/{value}')}\n"
+                self.genstr += f"add wave {options}{tcl_word(tree.path(value, sep='/'))}\n"
 
         super().process_disp(tree)

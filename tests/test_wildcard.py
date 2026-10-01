@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 from wavedisp.ast import Block, Disp, Hierarchy
-from wavedisp.checker import WildcardExpander, pattern_regex
+from wavedisp.checker import SignalChecker, WildcardExpander, pattern_regex
 from wavedisp.dump import read_signals
 from wavedisp.dump.signals import DumpSignals
 from wavedisp.targets.gtkwave import GTKWaveTarget
@@ -99,6 +99,29 @@ class TestWildcard(unittest.TestCase):
         self.assertTrue(regex.fullmatch("/tb/u/v/wea"))
         self.assertFalse(regex.fullmatch("/tb/wea/x"))
         self.assertFalse(regex.fullmatch("/tbx/wea"))
+
+    def test_expanded_names_are_literal(self):
+        """Escaped identifiers: a "/" is no level break, a "*" no wildcard."""
+
+        signals = DumpSignals(["tb.dut.\\u_core/reg_q", "tb.dut.\\a*b", "tb.dut.\\aXb"], "vcd", "net.vcd")
+        block = Block()
+        disp = block.add(Hierarchy("tb/dut")).add(Disp("\\a*", exclude="zz"))
+        block.add(Hierarchy("tb/dut")).add(Disp("*"))
+        block.forward()
+        WildcardExpander(signals).visit(block)
+
+        checker = SignalChecker(signals)
+        checker.visit(block)
+        self.assertEqual(checker.missing, [])
+
+        self.assertEqual(disp.path("\\a*b"), "tb.dut.\\a*b")
+        self.assertEqual(disp.path("\\a*b", sep="/"), "/tb/dut/\\a*b ")
+        for target in (GTKWaveTarget, ModelsimTarget):
+            script = target(block).genstr
+            self.assertNotIn("getFacName", script, target.name)
+            self.assertNotIn("find signals", script, target.name)
+        self.assertIn("tb.dut.\\\\u_core/reg_q]", GTKWaveTarget(block).genstr)
+        self.assertIn("/tb/dut/\\\\u_core/reg_q\\ \n", ModelsimTarget(block).genstr)
 
     def test_hierarchy_wildcard_is_reported_in_every_mode(self):
         """Even under a plain Disp, and even for a viewer that expands wildcards."""
