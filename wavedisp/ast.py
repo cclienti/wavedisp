@@ -51,6 +51,12 @@ def signal_path(hierarchy: str, name: str) -> str:
     return ".".join(levels)
 
 
+def is_pattern(value: str) -> bool:
+    """Say whether a Disp value is a wildcard rather than a name."""
+
+    return "*" in value or "?" in value
+
+
 class ASTBase:
     """Base class to describe a node or a leaf.
 
@@ -421,3 +427,38 @@ class Disp(ASTLeaf):
         else:
             self.value += [sig_names]
         self.exclude = [exclude] if isinstance(exclude, str) else list(exclude or [])
+
+        # Values a wildcard expanded to, with the levels the dump spells
+        # them in. They are names, not patterns: an escaped identifier
+        # may carry a "/" that is no level break, or a "*" that is no
+        # wildcard -- ``\\u_core/reg_q``, ``\\a*b``.
+        self.literal = {}
+
+    def is_wildcard(self, value: str) -> bool:
+        """Say whether ``value`` is still a wildcard to expand."""
+
+        return value not in self.literal and is_pattern(value)
+
+    def path(self, value: str, sep: str = ".") -> str:
+        """Return the path of the signal ``value`` names.
+
+        :param str sep: "." for a dotted path, the way dumps and most
+            viewers name signals, or "/" for a Modelsim style one, which
+            keeps the hierarchy as it was written.
+        """
+
+        levels = self.literal.get(value)
+
+        if sep == "/":
+            if levels is None:
+                return f"{self.hierarchy}/{value}"
+            # Modelsim spells a Verilog escaped identifier with the space
+            # that ends it, "\u_core/reg_q ", which a dump leaves out.
+            levels = [f"{level} " if level.startswith("\\") else level for level in levels]
+            return "/".join([self.hierarchy, *levels])
+
+        if levels is None:
+            return signal_path(self.hierarchy, value)
+
+        prefix = signal_path(self.hierarchy, "")
+        return ".".join([prefix, *levels] if prefix else levels)

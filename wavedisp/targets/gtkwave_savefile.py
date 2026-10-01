@@ -60,7 +60,6 @@ import logging
 import os
 import time
 
-from ..ast import signal_path
 from . import Target, TargetOptionError
 from .gtkwave import GTKWaveTarget
 
@@ -243,7 +242,7 @@ class GTKWaveSaveFileTarget(Target):
         """
 
         for value in tree.value:
-            path = signal_path(tree.hierarchy, value)
+            path = tree.path(value)
             spelling = self.dump.resolve(path)
 
             if spelling is None:

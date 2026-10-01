@@ -37,7 +37,6 @@ import logging
 import math
 import re
 
-from ..ast import signal_path
 from . import Target, TargetOptionError
 from .x11colors import X11_COLORS
 
@@ -537,7 +536,7 @@ class SurferTarget(Target):
         """
 
         for value in tree.value:
-            fullname = signal_path(tree.hierarchy, value)
+            fullname = tree.path(value)
 
             # Dropped rather than substituted: an altered path names a
             # signal that is not in the dump, and Surfer would add no row

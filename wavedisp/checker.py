@@ -22,7 +22,7 @@
 import logging
 import re
 
-from .ast import signal_path
+from .ast import is_pattern, signal_path
 from .dump.signals import viewer_name
 from .visitor import Visitor
 
@@ -52,7 +52,7 @@ class SignalChecker(Visitor):
         """
 
         for value in tree.value:
-            path = signal_path(tree.hierarchy, value)
+            path = tree.path(value)
             self.checked += 1
 
             if path not in self.signals:
@@ -69,12 +69,6 @@ class SignalChecker(Visitor):
 #: and Surfer drops what its format cannot carry; a line break is the one
 #: thing no quoting keeps inside a word, and no signal is named with one.
 UNSAFE_NAME = re.compile(r"[\x00-\x1f\x7f]")
-
-
-def is_pattern(value: str) -> bool:
-    """Say whether a Disp value is a wildcard rather than a name."""
-
-    return "*" in value or "?" in value
 
 
 def pattern_regex(hierarchy: str, value: str, sep: str = ".") -> str:
@@ -148,7 +142,7 @@ class WildcardExpander(Visitor):
         prefix = len(signal_path(tree.hierarchy, "").split(".")) if signal_path(tree.hierarchy, "") else 0
 
         for value in tree.value:
-            if not is_pattern(value) or (self.signals is None and self.native(value, tree.exclude)):
+            if not tree.is_wildcard(value) or (self.signals is None and self.native(value, tree.exclude)):
                 values.append(value)
                 continue
 
@@ -171,7 +165,9 @@ class WildcardExpander(Visitor):
                         name,
                     )
                     continue
-                matches.append("/".join(name.split(".")[prefix:]))
+                levels = tuple(name.split(".")[prefix:])
+                tree.literal["/".join(levels)] = levels
+                matches.append("/".join(levels))
 
             if not matches:
                 LOGGER.error(
